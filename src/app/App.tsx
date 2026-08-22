@@ -53,6 +53,7 @@ import SettingsPanel from './components/SettingsPanel';
 import VehicleMonitoringDashboard from './components/intelligent/VehicleMonitoringDashboard';
 import DrivingBehaviorAnalysis from './components/intelligent/DrivingBehaviorAnalysis';
 import FuelPrediction from './components/intelligent/FuelPrediction';
+import LoadTestDashboard from './components/monitoring/LoadTestDashboard';
 import CarConnection from './components/CarConnection';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DriveSenseProvider, useDriveSense } from '../context/DriveSenseContext';
@@ -111,6 +112,7 @@ type MainView =
   | 'location-tracking'
   | 'live-trip'
   | 'camera'
+  | 'load-testing'
   | 'trip-history'
   | 'trip-detail'
   | 'trip-comparison'
@@ -368,6 +370,7 @@ function AppContent() {
       children: [
         { id: 'live-trip', label: 'Active Trip', icon: Map, view: 'live-trip' as MainView },
         { id: 'camera', label: 'Drowsiness Detection', icon: Camera, view: 'camera' as MainView },
+        { id: 'load-testing', label: 'Load Testing (100 VUs)', icon: Zap, view: 'load-testing' as MainView },
       ],
     },
     {
@@ -484,6 +487,8 @@ function AppContent() {
         return <LiveTrip onEndTrip={async () => { await endTrip(); }} />;
       case 'camera':
         return <CameraView />;
+      case 'load-testing':
+        return <LoadTestDashboard />;
       case 'trip-history':
         return <TripHistory onSelectTrip={() => setCurrentView('trip-detail')} />;
       case 'trip-detail':
