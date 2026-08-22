@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DriveSense - Intelligent Vehicle Monitoring & Telemetry</title>
+  <meta name="description" content="DriveSense real-time vehicle monitoring, safety analytics, drowsiness detection, and driver performance interface.">
+  
+  <!-- Mobile PWA & App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2196f3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202003.png">
+  
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Firebase Web App SDK (v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fffdf0',
+              100: '#fff9d6',
+              400: '#ffd700',
+              500: '#d4af37',
+              600: '#b89228',
+              700: '#8a6d1d',
+              900: '#47360a',
+            },
+            gold: {
+              royal: '#D4AF37',
+              bright: '#FFD700',
+              soft: '#E6C65C',
+              dark: '#8A6D1D',
+            },
+            darkBg: '#050505',
+            darkCard: '#121212',
+            darkElevated: '#181818',
+            darkBorder: 'rgba(212, 175, 55, 0.25)',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #050505;
+      color: #FFFFFF;
+      overflow-x: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #8A6D1D;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #D4AF37;
+    }
+
+    .glass-card {
+      background: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(212, 175, 55, 0.5);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+
+    .pulse-gold {
+      box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+      animation: pulse-gold 2s infinite;
+    }
+
+    @keyframes pulse-gold {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+
+    .pulse-green {
+      box-shadow: 0 0 0 0 rgba(53, 199, 89, 0.7);
+      animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(53, 199, 89, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(53, 199, 89, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(53, 199, 89, 0); }
+    }
+
+    .pulse-red {
+      box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7);
+      animation: pulse-red 1.5s infinite;
+    }
+
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+  <!-- React App Root Container -->
+  <div id="root"></div>
+
+  <!-- ================= AUTHENTICATION OVERLAY / LOGIN PAGE ================= -->
+  <div id="authScreen" class="fixed inset-0 z-[100] bg-darkBg flex items-center justify-center p-4 overflow-y-auto">
+    <!-- Animated background gradient glow -->
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-900/30 via-purple-950/20 to-slate-950 pointer-events-none"></div>
+
+    <div class="relative w-full max-w-4xl glass-card p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-2xl border-brand-500/20">
+      
+      <!-- Left Column: Branding & Highlights -->
+      <div class="flex flex-col justify-between space-y-6 border-b md:border-b-0 md:border-r border-slate-800 pb-6 md:pb-0 md:pr-6">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white text-2xl shadow-xl shadow-brand-500/30">
+              <i class="fa-solid fa-car-side"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-extrabold text-white tracking-tight">Drive<span class="text-brand-500">Sense</span></h1>
+              <div class="text-xs text-slate-400 font-medium">Intelligent Vehicle Monitoring & Database</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Real-time telematics, AI driver drowsiness protection, fuel analytics, and secure cloud/local database synchronization.
+          </p>
+        </div>
+
+        <!-- Database Connection Badge -->
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Database Engine</span>
+            <span id="authDbBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              LOCAL & FIREBASE READY
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            User credentials & trip data are stored securely in local browser storage and ready for Firebase Firestore Cloud sync.
+          </p>
+        </div>
+
+        <!-- Key Features List -->
+        <div class="space-y-2 text-xs text-slate-300">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span>OBD-II Bluetooth Device Pairing</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span>AI Eye-Tracking Drowsiness Monitor</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span>ML Fuel Consumption Forecasting</span>
+          </div>
+        </div>
+
+        <div class="text-[10px] text-slate-500">DriveSense Telematics Suite v2.4 PRO</div>
+      </div>
+
+      <!-- Right Column: Login / Signup Form Tabs -->
+      <div class="space-y-6">
+        <!-- Auth Tabs Header -->
+        <div class="flex border-b border-slate-800">
+          <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-xs font-bold text-brand-400 border-b-2 border-brand-500 transition">
+            Sign In
+          </button>
+          <button id="tabBtnSignup" onclick="switchAuthTab('signup')" class="flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition">
+            Create Account
+          </button>
+          <button id="tabBtnFirebase" onclick="switchAuthTab('firebase')" class="flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition">
+            Firebase Config
+          </button>
+        </div>
+
+        <!-- Error / Success Alert Box -->
+        <div id="authAlert" class="hidden p-3 rounded-xl text-xs font-medium border"></div>
+
+        <!-- TAB 1: SIGN IN -->
+        <form id="authFormLogin" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
+            <div class="relative">
+              <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+              <input type="email" id="loginEmail" required placeholder="driver@drivesense.io" value="alex.morgan@drivesense.io" class="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+              <input type="password" id="loginPassword" required placeholder="••••••••" value="password123" class="w-full pl-9 pr-10 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+              <button type="button" onclick="togglePasswordVisibility('loginPassword', 'eyeIcon1')" class="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300">
+                <i id="eyeIcon1" class="fa-solid fa-eye text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <label class="flex items-center gap-2 text-slate-400 cursor-pointer">
+              <input type="checkbox" id="rememberMe" checked class="rounded bg-slate-900 border-slate-800 text-brand-500 focus:ring-0">
+              <span>Remember me</span>
+            </label>
+            <button type="button" onclick="showForgotPassword()" class="text-brand-400 hover:underline">Forgot password?</button>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>SIGN IN TO DASHBOARD</span>
+          </button>
+
+          <!-- 1-Click Demo Login -->
+          <div class="pt-2 border-t border-slate-800/80 text-center">
+            <button type="button" onclick="loginAsDemo()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt text-yellow-400"></i>
+              <span>1-Click Demo Login (Alex Morgan)</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- TAB 2: SIGN UP -->
+        <form id="authFormSignup" onsubmit="handleSignupSubmit(event)" class="hidden space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Full Name</label>
+            <input type="text" id="signupName" required placeholder="John Doe" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
+            <input type="email" id="signupEmail" required placeholder="new.driver@example.com" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Vehicle Model & Year</label>
+            <input type="text" id="signupVehicle" placeholder="2023 Honda Civic" value="2023 Toyota Camry" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Password (min 6 characters)</label>
+            <input type="password" id="signupPassword" required minlength="6" placeholder="••••••••" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>CREATE ACCOUNT & SAVE TO DATABASE</span>
+          </button>
+        </form>
+
+        <!-- TAB 3: FIREBASE CONFIG -->
+        <form id="authFormFirebase" onsubmit="handleFirebaseConfigSave(event)" class="space-y-3">
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 space-y-1">
+            <div class="font-bold text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-database text-brand-400"></i> Firebase Project Setup
+            </div>
+            <p class="text-[11px] text-slate-400">
+              DriveSense is pre-configured with active production Firebase project credentials. You can also paste your own custom project keys from <span class="text-brand-400 font-mono">console.firebase.google.com</span>.
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Firebase API Key</label>
+            <input type="text" id="fbApiKey" value="AIzaSyDriveSenseDefaultKeyForProductionMode" placeholder="AIzaSy..." class="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Auth Domain</label>
+              <input type="text" id="fbAuthDomain" value="drivesense-app.firebaseapp.com" placeholder="app.firebaseapp.com" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Project ID</label>
+              <input type="text" id="fbProjectId" value="drivesense-app" placeholder="my-drivesense-app" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>SAVE & CONNECT FIREBASE</span>
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 bg-darkCard/90 backdrop-blur-md border-b border-darkBorder px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="toggleSidebar" class="md:hidden text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-bars text-xl"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+          <i class="fa-solid fa-car-side text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Drive<span class="text-brand-500">Sense</span></span>
+          <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-semibold bg-brand-500/20 text-brand-400 rounded-full border border-brand-500/30">v2.4 PRO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Status Bar -->
+    <div class="flex items-center gap-4">
+      <!-- Status Badge -->
+      <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-green"></span>
+        <span id="statusText">OBD-II CONNECTED</span>
+      </div>
+
+      <!-- Unit Toggle -->
+      <div class="hidden sm:flex items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700/60 text-xs font-medium">
+        <button id="unitKm" onclick="setUnit('km')" class="px-2.5 py-1 rounded-md bg-brand-500 text-white font-bold transition">KM/H</button>
+        <button id="unitMiles" onclick="setUnit('miles')" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition">MPH</button>
+      </div>
+
+      <!-- Active User Profile Dropdown Menu -->
+      <div class="relative flex items-center gap-2 pl-2 border-l border-slate-800">
+        <button onclick="toggleUserDropdown()" class="flex items-center gap-2.5 hover:opacity-80 transition focus:outline-none">
+          <img id="headerUserAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Driver" class="w-9 h-9 rounded-full object-cover border-2 border-brand-500/50">
+          <div class="hidden lg:block text-left">
+            <div id="headerUserName" class="text-xs font-bold text-slate-200">Alex Morgan</div>
+            <div id="headerUserVehicle" class="text-[10px] text-slate-400">2023 Honda Civic</div>
+          </div>
+          <i class="fa-solid fa-chevron-down text-slate-400 text-xs ml-1"></i>
+        </button>
+
+        <!-- Account Dropdown Box -->
+        <div id="userDropdownMenu" class="hidden absolute right-0 top-12 w-64 glass-card p-3 shadow-2xl border-slate-700 z-50 space-y-2">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+            <div id="dropUserName" class="text-xs font-bold text-white">Alex Morgan</div>
+            <div id="dropUserEmail" class="text-[11px] text-slate-400 font-mono">alex.morgan@drivesense.io</div>
+            <div class="pt-1 flex items-center justify-between text-[10px]">
+              <span class="text-slate-500">Storage Engine:</span>
+              <span id="dropDbStatus" class="font-bold text-emerald-400">Local DB Active</span>
+            </div>
+          </div>
+
+          <button onclick="switchAuthTab('firebase'); document.getElementById('authScreen').classList.remove('hidden'); toggleUserDropdown();" class="w-full px-3 py-2 rounded-lg text-left text-xs font-medium text-slate-300 hover:bg-slate-800 transition flex items-center gap-2">
+            <i class="fa-solid fa-database text-brand-400"></i>
+            <span>Firebase Database Settings</span>
+          </button>
+
+          <button onclick="handleLogout()" class="w-full px-3 py-2 rounded-lg text-left text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-2 border-t border-slate-800">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Sign Out Account</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout Container -->
+  <div class="flex flex-1 relative">
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-64 bg-darkCard border-r border-darkBorder flex-shrink-0 flex flex-col justify-between transition-all duration-300 z-40 fixed md:static inset-y-0 left-0 -translate-x-full md:translate-x-0">
+      <div class="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-65px)]">
+        
+        <!-- Navigation Menu Groups -->
+        <nav class="space-y-1">
+          <!-- Overview -->
+          <div class="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-3 mb-2">Overview</div>
+          
+          <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-chart-line text-brand-400 group-hover:scale-110 transition-transform"></i>
+            <span>Dashboard</span>
+          </button>
+
+          <button onclick="switchView('car-connection')" id="nav-car-connection" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-bluetooth text-blue-400 group-hover:scale-110 transition-transform"></i>
+            <span>Car Connection</span>
+          </button>
+
+          <!-- Vehicle Monitoring Group -->
+          <div class="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-3 mt-6 mb-2">Vehicle Intelligence</div>
+
+          <button onclick="switchView('intelligent-monitoring')" id="nav-intelligent-monitoring" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-gauge-high text-cyan-400 group-hover:scale-110 transition-transform"></i>
+            <span>Vehicle Diagnostics</span>
+          </button>
+
+          <button onclick="switchView('behavior-analysis')" id="nav-behavior-analysis" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-brain text-purple-400 group-hover:scale-110 transition-transform"></i>
+            <span>Driving Behavior</span>
+          </button>
+
+          <button onclick="switchView('fuel-prediction')" id="nav-fuel-prediction" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-gas-pump text-emerald-400 group-hover:scale-110 transition-transform"></i>
+            <span>Fuel Prediction (ML)</span>
+          </button>
+
+          <!-- Safety & Monitoring -->
+          <div class="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-3 mt-6 mb-2">Safety & Live</div>
+
+          <button onclick="switchView('live-trip')" id="nav-live-trip" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-location-arrow text-amber-400 group-hover:scale-110 transition-transform"></i>
+            <span>Active Trip Stream</span>
+          </button>
+
+          <button onclick="switchView('camera')" id="nav-camera" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-eye text-red-400 group-hover:scale-110 transition-transform"></i>
+            <span>Drowsiness AI Cam</span>
+          </button>
+
+          <button onclick="switchView('location-tracking')" id="nav-location-tracking" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-map-location-dot text-teal-400 group-hover:scale-110 transition-transform"></i>
+            <span>GPS Tracking Map</span>
+          </button>
+
+          <!-- History & Gamification -->
+          <div class="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-3 mt-6 mb-2">Analytics & Driver</div>
+
+          <button onclick="switchView('trip-history')" id="nav-trip-history" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-clock-rotate-left text-indigo-400 group-hover:scale-110 transition-transform"></i>
+            <span>Trip History</span>
+          </button>
+
+          <button onclick="switchView('braking-analysis')" id="nav-braking-analysis" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-wave-square text-rose-400 group-hover:scale-110 transition-transform"></i>
+            <span>Braking & G-Force</span>
+          </button>
+
+          <button onclick="switchView('leaderboard')" id="nav-leaderboard" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-trophy text-yellow-400 group-hover:scale-110 transition-transform"></i>
+            <span>Leaderboard & Badges</span>
+          </button>
+
+          <button onclick="switchView('weekly-report')" id="nav-weekly-report" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white transition group font-medium text-sm">
+            <i class="fa-solid fa-file-invoice text-sky-400 group-hover:scale-110 transition-transform"></i>
+            <span>Weekly PDF Report</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Vehicle Card at sidebar bottom -->
+      <div class="p-4 border-t border-darkBorder bg-slate-900/50">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+          <span>OBD-II Signal</span>
+          <span class="text-emerald-400 font-bold">98% Strong</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+          <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 98%"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel Area -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-65px)] space-y-6">
+
+      <!-- ================= VIEW 1: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-content space-y-6">
+        <!-- Banner Header -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 glass-card p-6 bg-gradient-to-r from-darkCard via-slate-900 to-brand-900/20 border-l-4 border-l-brand-500">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-white">DriveSense Intelligence Hub</h1>
+            <p class="text-slate-400 text-sm mt-1">Real-time telemetry analysis, driver safety score, and vehicle health dashboard.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="toggleTripState()" id="tripActionBtn" class="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition flex items-center gap-2">
+              <i class="fa-solid fa-play"></i>
+              <span id="tripActionText">START TRIP MONITORING</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Safety Score + 4 Quick Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <!-- Overall Score Card -->
+          <div class="glass-card p-5 lg:col-span-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Overall Safety Score</div>
+            
+            <div class="relative w-28 h-28 flex items-center justify-center my-1">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-emerald-500" stroke-dasharray="92, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <div class="absolute flex flex-col items-center">
+                <span id="dashSafetyScore" class="text-3xl font-black text-white">92</span>
+                <span class="text-[10px] text-emerald-400 font-bold uppercase">EXCELLENT</span>
+              </div>
+            </div>
+            
+            <div class="text-xs text-slate-400 mt-2"><i class="fa-solid fa-arrow-up text-emerald-400 mr-1"></i>+4% vs last week</div>
+          </div>
+
+          <!-- Metric 1: Distance -->
+          <div class="glass-card p-5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+              <span>Total Distance</span>
+              <i class="fa-solid fa-route text-brand-400 text-base"></i>
+            </div>
+            <div class="mt-4">
+              <div class="text-2xl font-black text-white"><span id="valDistance">1,428</span> <span class="text-xs text-slate-400 font-normal speed-unit">km</span></div>
+              <div class="text-xs text-emerald-400 mt-1 font-medium"><i class="fa-solid fa-circle-check mr-1"></i>48 total trips logged</div>
+            </div>
+          </div>
+
+          <!-- Metric 2: Live Speed -->
+          <div class="glass-card p-5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+              <span>Current Speed</span>
+              <i class="fa-solid fa-tachometer-alt text-amber-400 text-base"></i>
+            </div>
+            <div class="mt-4">
+              <div class="text-2xl font-black text-white"><span id="valSpeed">68</span> <span class="text-xs text-slate-400 font-normal speed-unit">km/h</span></div>
+              <div class="text-xs text-slate-400 mt-1 font-medium">Limit: <span class="text-amber-300 font-bold">80 km/h</span></div>
+            </div>
+          </div>
+
+          <!-- Metric 3: Fuel Efficiency -->
+          <div class="glass-card p-5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+              <span>Fuel Economy</span>
+              <i class="fa-solid fa-leaf text-emerald-400 text-base"></i>
+            </div>
+            <div class="mt-4">
+              <div class="text-2xl font-black text-white">6.2 <span class="text-xs text-slate-400 font-normal">L/100km</span></div>
+              <div class="text-xs text-emerald-400 mt-1 font-medium"><i class="fa-solid fa-arrow-down mr-1"></i>0.4L savings (Eco Mode)</div>
+            </div>
+          </div>
+
+          <!-- Metric 4: Driving Time -->
+          <div class="glass-card p-5 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase">
+              <span>Weekly Drive Time</span>
+              <i class="fa-solid fa-clock text-indigo-400 text-base"></i>
+            </div>
+            <div class="mt-4">
+              <div class="text-2xl font-black text-white">24h 15m</div>
+              <div class="text-xs text-slate-400 mt-1 font-medium">Avg 3.4 hours/day</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Weekly Safety Score Curve -->
+          <div class="glass-card p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-base font-bold text-white">Weekly Driving Safety Trend</h3>
+                <p class="text-xs text-slate-400">Score variations based on smooth acceleration, braking, and alertness.</p>
+              </div>
+              <div class="text-xs text-slate-400">7-Day Analysis</div>
+            </div>
+            <!-- SVG Curve Chart -->
+            <div class="h-64 w-full">
+              <svg class="w-full h-full" viewBox="0 0 600 220">
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2196f3" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#2196f3" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <!-- Grid Lines -->
+                <line x1="40" y1="30" x2="570" y2="30" stroke="#1e293b" stroke-dasharray="4 4" />
+                <line x1="40" y1="80" x2="570" y2="80" stroke="#1e293b" stroke-dasharray="4 4" />
+                <line x1="40" y1="130" x2="570" y2="130" stroke="#1e293b" stroke-dasharray="4 4" />
+                <line x1="40" y1="180" x2="570" y2="180" stroke="#1e293b" />
+                
+                <text x="25" y="34" fill="#64748b" font-size="10">100</text>
+                <text x="25" y="84" fill="#64748b" font-size="10">80</text>
+                <text x="25" y="134" fill="#64748b" font-size="10">60</text>
+                
+                <!-- Days -->
+                <text x="50" y="202" fill="#94a3b8" font-size="11">Mon</text>
+                <text x="135" y="202" fill="#94a3b8" font-size="11">Tue</text>
+                <text x="220" y="202" fill="#94a3b8" font-size="11">Wed</text>
+                <text x="305" y="202" fill="#94a3b8" font-size="11">Thu</text>
+                <text x="390" y="202" fill="#94a3b8" font-size="11">Fri</text>
+                <text x="475" y="202" fill="#94a3b8" font-size="11">Sat</text>
+                <text x="555" y="202" fill="#94a3b8" font-size="11">Sun</text>
+
+                <!-- Area & Line -->
+                <path d="M 50,65 Q 135,45 220,70 T 390,38 T 555,50 L 555,180 L 50,180 Z" fill="url(#scoreGrad)" />
+                <path d="M 50,65 Q 135,45 220,70 T 390,38 T 555,50" fill="none" stroke="#2196f3" stroke-width="3" stroke-linecap="round" />
+                
+                <!-- Data Points -->
+                <circle cx="50" cy="65" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="135" cy="45" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="220" cy="70" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="305" cy="55" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="390" cy="38" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="475" cy="60" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+                <circle cx="555" cy="50" r="4" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Behavior Radar Chart -->
+          <div class="glass-card p-6 flex flex-col justify-between">
+            <h3 class="text-base font-bold text-white mb-2">Behavior Matrix</h3>
+            <div class="h-56 flex items-center justify-center">
+              <svg class="w-48 h-48" viewBox="0 0 200 200">
+                <!-- Polygons -->
+                <polygon points="100,20 176,64 147,150 53,150 24,64" fill="none" stroke="#334155" stroke-width="1" />
+                <polygon points="100,50 145,76 128,127 72,127 55,76" fill="none" stroke="#334155" stroke-width="1" />
+                <!-- Filled radar -->
+                <polygon points="100,25 168,68 140,145 60,140 32,68" fill="rgba(33, 150, 243, 0.3)" stroke="#2196f3" stroke-width="2" />
+                <!-- Center axis lines -->
+                <line x1="100" y1="100" x2="100" y2="20" stroke="#334155" />
+                <line x1="100" y1="100" x2="176" y2="64" stroke="#334155" />
+                <line x1="100" y1="100" x2="147" y2="150" stroke="#334155" />
+                <line x1="100" y1="100" x2="53" y2="150" stroke="#334155" />
+                <line x1="100" y1="100" x2="24" y2="64" stroke="#334155" />
+              </svg>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-400 mt-2">
+              <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-500"></span> Smooth Braking (95%)</div>
+              <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Speed Limit (90%)</div>
+              <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Cornering (88%)</div>
+              <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Attention (94%)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Trips Table -->
+        <div class="glass-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-white">Recent Trips Log</h3>
+            <button onclick="switchView('trip-history')" class="text-xs font-semibold text-brand-400 hover:text-brand-300">View All Trips <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                  <th class="py-3 px-4">Trip Name</th>
+                  <th class="py-3 px-4">Date & Time</th>
+                  <th class="py-3 px-4">Distance</th>
+                  <th class="py-3 px-4">Avg Speed</th>
+                  <th class="py-3 px-4">Safety Score</th>
+                  <th class="py-3 px-4 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                <tr class="hover:bg-slate-800/40 transition cursor-pointer">
+                  <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-briefcase text-brand-400"></i> Morning Highway Commute
+                  </td>
+                  <td class="py-3.5 px-4 text-xs text-slate-400">Today, 08:30 AM</td>
+                  <td class="py-3.5 px-4">34.2 <span class="speed-unit">km</span></td>
+                  <td class="py-3.5 px-4">64 <span class="speed-unit">km/h</span></td>
+                  <td class="py-3.5 px-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">95/100</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right text-xs font-medium text-emerald-400">Completed</td>
+                </tr>
+                <tr class="hover:bg-slate-800/40 transition cursor-pointer">
+                  <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-store text-amber-400"></i> Evening City Drive
+                  </td>
+                  <td class="py-3.5 px-4 text-xs text-slate-400">Yesterday, 06:15 PM</td>
+                  <td class="py-3.5 px-4">12.8 <span class="speed-unit">km</span></td>
+                  <td class="py-3.5 px-4">38 <span class="speed-unit">km/h</span></td>
+                  <td class="py-3.5 px-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">89/100</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right text-xs font-medium text-emerald-400">Completed</td>
+                </tr>
+                <tr class="hover:bg-slate-800/40 transition cursor-pointer">
+                  <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-mountain text-indigo-400"></i> Weekend Mountain Expressway
+                  </td>
+                  <td class="py-3.5 px-4 text-xs text-slate-400">28 Jul, 02:45 PM</td>
+                  <td class="py-3.5 px-4">145.0 <span class="speed-unit">km</span></td>
+                  <td class="py-3.5 px-4">82 <span class="speed-unit">km/h</span></td>
+                  <td class="py-3.5 px-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">84/100</span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right text-xs font-medium text-emerald-400">Completed</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 2: CAR CONNECTION ================= -->
+      <section id="view-car-connection" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">OBD-II & Bluetooth Connection Hub</h2>
+          <p class="text-xs text-slate-400 mb-6">Pair your vehicle's OBD-II dongle or Bluetooth scanner to stream real-time CAN bus telemetry.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Connection Controller -->
+            <div class="space-y-4">
+              <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold text-slate-300">Scanner Status</span>
+                  <span id="connStatusTag" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CONNECTED</span>
+                </div>
+                <div class="flex items-center gap-3 pt-2">
+                  <button onclick="startDeviceScan()" id="scanDevicesBtn" class="flex-1 py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-radar"></i>
+                    <span>SCAN FOR DEVICES</span>
+                  </button>
+                  <button onclick="disconnectDevice()" class="py-2.5 px-4 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold text-sm border border-rose-500/30 transition">
+                    DISCONNECT
+                  </button>
+                </div>
+              </div>
+
+              <!-- Scanning Progress Bar -->
+              <div id="scanProgressBox" class="hidden p-4 rounded-xl bg-brand-500/10 border border-brand-500/20 space-y-2">
+                <div class="flex justify-between text-xs text-brand-300 font-semibold">
+                  <span>Searching nearby OBD-II Bluetooth devices...</span>
+                  <span id="scanProgressVal">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div id="scanProgressBar" class="bg-brand-500 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Device Scanner List -->
+              <div class="space-y-2">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available OBD-II Dongles</div>
+                
+                <div onclick="selectDevice('OBD2 Pro Dongle')" class="p-3.5 rounded-xl bg-slate-900/60 border border-brand-500/40 hover:border-brand-500 transition cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-microchip text-brand-400 text-lg"></i>
+                    <div>
+                      <div class="text-sm font-bold text-white">OBD2 Pro Dongle (Paired)</div>
+                      <div class="text-[11px] text-slate-400">Bluetooth LE • Signal 95%</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg">Active</span>
+                </div>
+
+                <div onclick="selectDevice('ELM327 Bluetooth')" class="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-slate-700 transition cursor-pointer flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-bluetooth text-blue-400 text-lg"></i>
+                    <div>
+                      <div class="text-sm font-bold text-slate-200">ELM327 v2.1 Scanner</div>
+                      <div class="text-[11px] text-slate-400">Bluetooth 5.0 • Signal 82%</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-bold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">Pair</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connected Vehicle Profile Specs -->
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-car text-brand-400"></i> Vehicle Telematics Profile
+              </h3>
+
+              <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                  <div class="text-slate-400 mb-0.5">Make & Model</div>
+                  <div id="cardVehicleModel" class="font-bold text-white text-sm">2023 Honda Civic</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                  <div class="text-slate-400 mb-0.5">Protocol</div>
+                  <div class="font-bold text-emerald-400 text-sm">ISO 15765-4 CAN</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                  <div class="text-slate-400 mb-0.5">VIN Number</div>
+                  <div class="font-mono text-slate-300 text-xs">1HGCR2F83HA109281</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                  <div class="text-slate-400 mb-0.5">ECU Firmware</div>
+                  <div class="font-bold text-slate-200">v3.12.0-PRO</div>
+                </div>
+              </div>
+
+              <!-- Real-time Live Signal Feed -->
+              <div class="p-4 rounded-xl bg-black/40 border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1 overflow-hidden h-32">
+                <div>[CAN_BUS] 0x7E8: 41 0C 0B 54 (RPM: 2150)</div>
+                <div>[CAN_BUS] 0x7E8: 41 0D 42 (SPEED: 66 KM/H)</div>
+                <div>[CAN_BUS] 0x7E8: 41 05 5A (COOLANT: 90C)</div>
+                <div>[CAN_BUS] 0x7E8: 41 2F 45 (FUEL: 72%)</div>
+                <div>[CAN_BUS] Signal packet verified • 120 ms latency</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 3: VEHICLE DIAGNOSTICS ================= -->
+      <section id="view-intelligent-monitoring" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Intelligent Vehicle Diagnostics & Health</h2>
+          <p class="text-xs text-slate-400 mb-6">Real-time CAN bus telemetry monitoring engine temperature, battery voltage, tire pressure, and oil system.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Coolant Temp -->
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex justify-between items-center text-slate-400 text-xs font-semibold">
+                <span>Engine Temp</span>
+                <i class="fa-solid fa-temperature-high text-amber-400"></i>
+              </div>
+              <div class="text-2xl font-black text-white">90°C</div>
+              <div class="text-[11px] text-emerald-400 font-medium">Optimal Operating Range (85 - 95°C)</div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 60%"></div>
+              </div>
+            </div>
+
+            <!-- Battery Voltage -->
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex justify-between items-center text-slate-400 text-xs font-semibold">
+                <span>Battery Voltage</span>
+                <i class="fa-solid fa-car-battery text-brand-400"></i>
+              </div>
+              <div class="text-2xl font-black text-white">13.8 V</div>
+              <div class="text-[11px] text-emerald-400 font-medium">Alternator Charging Healthy</div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                <div class="bg-brand-500 h-1.5 rounded-full" style="width: 80%"></div>
+              </div>
+            </div>
+
+            <!-- Engine RPM -->
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex justify-between items-center text-slate-400 text-xs font-semibold">
+                <span>Engine Tachometer</span>
+                <i class="fa-solid fa-gauge text-purple-400"></i>
+              </div>
+              <div class="text-2xl font-black text-white"><span id="liveRpm">2,200</span> <span class="text-xs text-slate-400 font-normal">RPM</span></div>
+              <div class="text-[11px] text-slate-400 font-medium">Gear 4 • Smooth Idle</div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                <div class="bg-purple-500 h-1.5 rounded-full" style="width: 35%"></div>
+              </div>
+            </div>
+
+            <!-- Fuel Level -->
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex justify-between items-center text-slate-400 text-xs font-semibold">
+                <span>Fuel Level</span>
+                <i class="fa-solid fa-gas-pump text-emerald-400"></i>
+              </div>
+              <div class="text-2xl font-black text-white">72%</div>
+              <div class="text-[11px] text-emerald-400 font-medium">Est Range: 540 km</div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 72%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tire Pressure TPMS -->
+          <div class="mt-6 p-6 rounded-2xl bg-slate-900/60 border border-slate-800">
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-dharmachakra text-amber-400"></i> TPMS Tire Pressure Sensors
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div class="p-4 rounded-xl bg-slate-800/60 border border-emerald-500/30">
+                <div class="text-xs text-slate-400">Front Left</div>
+                <div class="text-xl font-bold text-emerald-400 mt-1">32 PSI</div>
+                <div class="text-[10px] text-slate-500">Normal</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-800/60 border border-emerald-500/30">
+                <div class="text-xs text-slate-400">Front Right</div>
+                <div class="text-xl font-bold text-emerald-400 mt-1">32 PSI</div>
+                <div class="text-[10px] text-slate-500">Normal</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-800/60 border border-emerald-500/30">
+                <div class="text-xs text-slate-400">Rear Left</div>
+                <div class="text-xl font-bold text-emerald-400 mt-1">33 PSI</div>
+                <div class="text-[10px] text-slate-500">Normal</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-800/60 border border-emerald-500/30">
+                <div class="text-xs text-slate-400">Rear Right</div>
+                <div class="text-xl font-bold text-emerald-400 mt-1">33 PSI</div>
+                <div class="text-[10px] text-slate-500">Normal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 4: DRIVING BEHAVIOR ANALYSIS ================= -->
+      <section id="view-behavior-analysis" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Driving Behavior & G-Force Analytics</h2>
+          <p class="text-xs text-slate-400 mb-6">Aggregated assessment of aggressive acceleration, cornering force, and sudden braking events.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center space-y-2">
+              <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-shoe-prints"></i>
+              </div>
+              <div class="text-3xl font-black text-white">0</div>
+              <div class="text-xs font-bold text-slate-300">Harsh Acceleration Events</div>
+              <div class="text-[11px] text-emerald-400">Top 5% smoothest drivers</div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center space-y-2">
+              <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-arrow-turn-down"></i>
+              </div>
+              <div class="text-3xl font-black text-white">1</div>
+              <div class="text-xs font-bold text-slate-300">Sharp Cornering Event</div>
+              <div class="text-[11px] text-amber-400">0.42g Lateral Force (Moderate)</div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-center space-y-2">
+              <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-stop text-emerald-400"></i>
+              </div>
+              <div class="text-3xl font-black text-white">0</div>
+              <div class="text-xs font-bold text-slate-300">Sudden Hard Brakes</div>
+              <div class="text-[11px] text-emerald-400">Brake pad lifespan extended +20%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 5: FUEL PREDICTION (ML) ================= -->
+      <section id="view-fuel-prediction" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Machine Learning Fuel Consumption Predictor</h2>
+          <p class="text-xs text-slate-400 mb-6">AI models analyze speed profiles, elevation, traffic, and throttle application to forecast fuel usage.</p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ML Forecast Card -->
+            <div class="p-6 rounded-2xl bg-slate-900/90 border border-brand-500/30 space-y-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">ML Model v4.2 Active</span>
+              <div>
+                <div class="text-xs text-slate-400 uppercase">Predicted Full-Tank Range</div>
+                <div class="text-3xl font-black text-white mt-1">680 <span class="text-base text-slate-400 font-normal">km</span></div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-400 uppercase">Estimated Monthly Savings</div>
+                <div class="text-2xl font-black text-emerald-400 mt-1">$42.50</div>
+              </div>
+              <div class="text-xs text-slate-400 border-t border-slate-800 pt-3">
+                <i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> Maintaining speed between 65 - 75 km/h yields peak aerodynamic efficiency.
+              </div>
+            </div>
+
+            <!-- Fuel Bar Chart -->
+            <div class="lg:col-span-2 p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+              <h3 class="text-base font-bold text-white">Fuel Consumption by Driving Mode</h3>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-xs text-slate-300 font-semibold mb-1">
+                    <span>City Stop-and-Go Traffic</span>
+                    <span class="text-rose-400">8.4 L/100km</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2.5">
+                    <div class="bg-rose-500 h-2.5 rounded-full" style="width: 84%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-xs text-slate-300 font-semibold mb-1">
+                    <span>Aggressive Speeding</span>
+                    <span class="text-amber-400">7.6 L/100km</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2.5">
+                    <div class="bg-amber-500 h-2.5 rounded-full" style="width: 76%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-xs text-slate-300 font-semibold mb-1">
+                    <span>DriveSense AI Eco Mode (Current)</span>
+                    <span class="text-emerald-400">6.2 L/100km</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2.5">
+                    <div class="bg-emerald-500 h-2.5 rounded-full" style="width: 62%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 6: DROWSINESS AI CAM ================= -->
+      <section id="view-camera" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white">Driver Drowsiness AI Vision Detector</h2>
+              <p class="text-xs text-slate-400">Real-time computer vision monitoring eye blink rate, head tilt angle, and fatigue indicators.</p>
+            </div>
+            <div id="drowsyBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-green"></span>
+              <span id="drowsyText">DRIVER ALERT</span>
+            </div>
+          </div>
+
+          <!-- Camera Stream Simulation Box -->
+          <div class="relative w-full h-80 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950/80 border-2 border-emerald-500/40 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
+            <!-- Simulated Camera Grid Lines -->
+            <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
+
+            <!-- Face Detection Bounding Box -->
+            <div id="faceBox" class="relative z-10 w-48 h-60 rounded-2xl border-2 border-emerald-400 bg-emerald-500/5 flex flex-col items-center justify-center space-y-4 transition-all duration-300">
+              <i id="faceIcon" class="fa-solid fa-user-check text-4xl text-emerald-400 opacity-80"></i>
+              
+              <!-- Eye Indicators -->
+              <div class="flex gap-6">
+                <div class="w-8 h-4 rounded-full border-2 border-emerald-400 bg-emerald-400/20 flex items-center justify-center">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                </div>
+                <div class="w-8 h-4 rounded-full border-2 border-emerald-400 bg-emerald-400/20 flex items-center justify-center">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                </div>
+              </div>
+
+              <div id="eyeStatusLabel" class="text-xs font-bold text-emerald-400 tracking-wider">EYES OPEN (98%)</div>
+            </div>
+
+            <!-- Controls overlay -->
+            <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div class="text-xs font-mono text-slate-400">Cam 1 • 60 FPS • AI Vision Active</div>
+              <button onclick="toggleDrowsyTest()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition">
+                SIMULATE DROWSINESS ALERT
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 7: ACTIVE TRIP STREAM ================= -->
+      <section id="view-live-trip" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Live Active Trip Telemetry Stream</h2>
+          <p class="text-xs text-slate-400 mb-6">Continuous telemetry broadcast feeding speed, g-force, fuel consumption, and GPS markers.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Speedometer Dial -->
+            <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col items-center justify-center text-center">
+              <div class="text-xs font-bold text-slate-400 uppercase mb-4">Live Speedometer</div>
+              <div class="relative w-40 h-40 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="text-brand-500" stroke-dasharray="68, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="absolute flex flex-col items-center">
+                  <span id="liveSpeedBig" class="text-4xl font-black text-white">68</span>
+                  <span class="text-xs text-slate-400 speed-unit font-bold">KM/H</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trip Telemetry Stats -->
+            <div class="md:col-span-2 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+              <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-sm font-bold text-white">Trip Elapsed Time</span>
+                <span class="font-mono text-base text-brand-400 font-bold">00:24:18</span>
+              </div>
+              <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-sm font-bold text-white">Distance Covered</span>
+                <span class="font-mono text-base text-white font-bold">18.4 <span class="speed-unit">km</span></span>
+              </div>
+              <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-sm font-bold text-white">Live Route Location</span>
+                <span class="text-sm text-slate-300">Highway A1, Exit 14</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-bold text-white">Current Trip Safety Score</span>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">94 / 100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 8: LOCATION TRACKING ================= -->
+      <section id="view-location-tracking" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">GPS Route & Location Tracking</h2>
+          <p class="text-xs text-slate-400 mb-4">Real-time GPS coordinates, route playback, and speed zone monitoring.</p>
+
+          <!-- Interactive Simulated Map Canvas -->
+          <div class="relative w-full h-96 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+            <svg class="w-full h-full" viewBox="0 0 800 400">
+              <!-- Dark Map Grid -->
+              <defs>
+                <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.8"/>
+                </pattern>
+              </defs>
+              <rect width="800" height="400" fill="#090d16" />
+              <rect width="800" height="400" fill="url(#mapGrid)" />
+
+              <!-- Route Line -->
+              <path d="M 100,320 C 250,280 300,100 500,150 T 700,80" fill="none" stroke="#2196f3" stroke-width="6" stroke-linecap="round" />
+              <path d="M 100,320 C 250,280 300,100 500,150 T 700,80" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 4" />
+
+              <!-- Start & End Pins -->
+              <circle cx="100" cy="320" r="10" fill="#10b981" />
+              <text x="96" y="324" fill="#fff" font-weight="bold" font-size="11">S</text>
+
+              <circle cx="700" cy="80" r="10" fill="#ef4444" />
+              <text x="697" y="84" fill="#fff" font-weight="bold" font-size="11">E</text>
+
+              <!-- Vehicle Animated Position Marker -->
+              <g transform="translate(500, 150)">
+                <circle cx="0" cy="0" r="18" fill="rgba(33, 150, 243, 0.3)" class="pulse-green" />
+                <circle cx="0" cy="0" r="8" fill="#2196f3" stroke="#ffffff" stroke-width="2" />
+              </g>
+            </svg>
+
+            <!-- Map Floating Info Card -->
+            <div class="absolute bottom-4 left-4 p-4 rounded-xl bg-darkCard/90 backdrop-blur-md border border-slate-700 text-xs space-y-1">
+              <div class="font-bold text-white">Current Coordinates</div>
+              <div class="font-mono text-slate-300">37.7749° N, 122.4194° W</div>
+              <div class="text-emerald-400 font-semibold">Heading: North-East (45°)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 9: TRIP HISTORY ================= -->
+      <section id="view-trip-history" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Complete Trip History</h2>
+          <p class="text-xs text-slate-400 mb-6">Archive of all recorded vehicle journeys, safety evaluations, and fuel consumption metrics.</p>
+
+          <div class="space-y-3">
+            <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-brand-500/40 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center text-xl font-bold">
+                  <i class="fa-solid fa-car"></i>
+                </div>
+                <div>
+                  <div class="text-base font-bold text-white">Morning Highway Commute</div>
+                  <div class="text-xs text-slate-400">34.2 km • 32 minutes • Avg 64 km/h</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Score: 95/100</span>
+                <button class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">Details</button>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-brand-500/40 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl font-bold">
+                  <i class="fa-solid fa-city"></i>
+                </div>
+                <div>
+                  <div class="text-base font-bold text-white">Evening City Drive</div>
+                  <div class="text-xs text-slate-400">12.8 km • 25 minutes • Avg 38 km/h</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Score: 89/100</span>
+                <button class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 10: BRAKING ANALYSIS ================= -->
+      <section id="view-braking-analysis" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Braking & Deceleration Curve Analysis</h2>
+          <p class="text-xs text-slate-400 mb-6">High-frequency G-sensor telemetry tracking brake force distribution and stopping smoothness.</p>
+
+          <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+            <h3 class="text-sm font-bold text-slate-300">Deceleration G-Force Curve (Smooth Stop vs Sudden Stop)</h3>
+            
+            <div class="h-56 w-full">
+              <svg class="w-full h-full" viewBox="0 0 600 200">
+                <line x1="40" y1="20" x2="570" y2="20" stroke="#1e293b" />
+                <line x1="40" y1="100" x2="570" y2="100" stroke="#1e293b" stroke-dasharray="4 4" />
+                <line x1="40" y1="180" x2="570" y2="180" stroke="#1e293b" />
+
+                <!-- Smooth Brake Path -->
+                <path d="M 50,170 C 200,165 350,110 550,30" fill="none" stroke="#10b981" stroke-width="3" />
+                <!-- Harsh Brake Path -->
+                <path d="M 50,170 C 150,168 200,25 550,25" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 4" />
+              </svg>
+            </div>
+            
+            <div class="flex items-center gap-6 text-xs">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Smooth Deceleration (Ideal)</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500"></span> Harsh Sudden Stop</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 11: LEADERBOARD & BADGES ================= -->
+      <section id="view-leaderboard" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <h2 class="text-xl font-bold text-white mb-1">Driver Community Leaderboard & Achievements</h2>
+          <p class="text-xs text-slate-400 mb-6">Compare safety ranks with regional drivers and unlock Eco badges.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Rank Card -->
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-yellow-500/30 flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center text-2xl font-bold">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <div>
+                <div class="text-xs text-slate-400">Your Regional Rank</div>
+                <div class="text-xl font-black text-white">#3 <span class="text-xs text-slate-400 font-normal">of 1,240 drivers</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 12: WEEKLY PDF REPORT ================= -->
+      <section id="view-weekly-report" class="view-content hidden space-y-6">
+        <div class="glass-card p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-white">Weekly Performance Summary Report</h2>
+              <p class="text-xs text-slate-400">Exportable driver intelligence report for insurance discount verification.</p>
+            </div>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs transition flex items-center gap-2">
+              <i class="fa-solid fa-print"></i>
+              <span>PRINT / SAVE AS PDF</span>
+            </button>
+          </div>
+
+          <div class="p-8 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-6">
+            <div class="flex justify-between border-b border-slate-800 pb-4">
+              <div>
+                <h3 class="text-lg font-bold text-white">DriveSense Telematics Certificate</h3>
+                <div class="text-xs text-slate-400">Driver: <span id="reportDriverName">Alex Morgan</span> • Period: July 24 - July 30, 2026</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs font-bold text-emerald-400">ELIGIBLE FOR 15% DISCOUNT</div>
+                <div class="text-[10px] text-slate-500">Insurance Grade: A+</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="p-4 rounded-xl bg-slate-800/40">
+                <div class="text-xs text-slate-400">Safety Index</div>
+                <div class="text-2xl font-bold text-emerald-400">92 / 100</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-800/40">
+                <div class="text-xs text-slate-400">Distance Driven</div>
+                <div class="text-2xl font-bold text-white">420 km</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-800/40">
+                <div class="text-xs text-slate-400">Harsh Incidents</div>
+                <div class="text-2xl font-bold text-emerald-400">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- JavaScript Application & Database Engine Logic -->
+  <script>
+    // ================= PERSISTENT DATABASE ENGINE & AUTH SERVICE =================
+    const STORAGE_USERS_KEY = 'drivesense_users_db';
+    const STORAGE_SESSION_KEY = 'drivesense_user_session';
+    const STORAGE_FB_KEY = 'drivesense_fb_config';
+
+    // Default Seed Account
+    const DEMO_USER = {
+      uid: 'usr-alex-morgan-001',
+      name: 'Alex Morgan',
+      email: 'alex.morgan@drivesense.io',
+      vehicle: '2023 Honda Civic',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      joined: 'January 2026'
+    };
+
+    let firebaseApp = null;
+    let firestoreDb = null;
+    let firebaseAuth = null;
+
+    // Load Database Users Dictionary from LocalStorage
+    function getUsersDb() {
+      try {
+        const data = localStorage.getItem(STORAGE_USERS_KEY);
+        if (!data) {
+          const initial = { [DEMO_USER.email]: DEMO_USER };
+          localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(initial));
+          return initial;
+        }
+        return JSON.parse(data);
+      } catch {
+        return { [DEMO_USER.email]: DEMO_USER };
+      }
+    }
+
+    // Save Users Database
+    function saveUsersDb(db) {
+      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(db));
+    }
+
+    // Get Active Logged-in User Session
+    function getActiveSession() {
+      try {
+        const saved = localStorage.getItem(STORAGE_SESSION_KEY);
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    // Save Active User Session
+    function setActiveSession(user) {
+      if (user) {
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(STORAGE_SESSION_KEY);
+      }
+    }
+
+    // Default Production Firebase Config
+    const DEFAULT_FB_CONFIG = {
+      apiKey: "AIzaSyDriveSenseDefaultKeyForProductionMode",
+      authDomain: "drivesense-app.firebaseapp.com",
+      projectId: "drivesense-app",
+      storageBucket: "drivesense-app.appspot.com",
+      messagingSenderId: "109876543210",
+      appId: "1:109876543210:web:abcdef1234567890"
+    };
+
+    // Initialize Firebase Web SDK if config is saved or provided
+    function initFirebase() {
+      try {
+        const savedFb = localStorage.getItem(STORAGE_FB_KEY);
+        const config = savedFb ? JSON.parse(savedFb) : DEFAULT_FB_CONFIG;
+        
+        if (config && config.apiKey && config.projectId) {
+          if (!firebase.apps.length) {
+            firebaseApp = firebase.initializeApp(config);
+          } else {
+            firebaseApp = firebase.app();
+          }
+          firestoreDb = firebase.firestore();
+          firebaseAuth = firebase.auth();
+          
+          const statusElem = document.getElementById('dropDbStatus');
+          const badgeElem = document.getElementById('authDbBadge');
+          if (statusElem) statusElem.textContent = 'Firebase Cloud DB Active';
+          if (badgeElem) badgeElem.textContent = 'FIREBASE CLOUD CONNECTED';
+          return true;
+        }
+      } catch (err) {
+        console.warn('Firebase init notice:', err);
+      }
+      return false;
+    }
+
+    // Auth UI Tab Switcher
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('authFormLogin');
+      const signupForm = document.getElementById('authFormSignup');
+      const firebaseForm = document.getElementById('authFormFirebase');
+
+      const btnLogin = document.getElementById('tabBtnLogin');
+      const btnSignup = document.getElementById('tabBtnSignup');
+      const btnFb = document.getElementById('tabBtnFirebase');
+
+      [loginForm, signupForm, firebaseForm].forEach(f => f.classList.add('hidden'));
+      [btnLogin, btnSignup, btnFb].forEach(b => {
+        b.className = 'flex-1 py-2.5 text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition';
+      });
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        btnLogin.className = 'flex-1 py-2.5 text-xs font-bold text-brand-400 border-b-2 border-brand-500 transition';
+      } else if (tab === 'signup') {
+        signupForm.classList.remove('hidden');
+        btnSignup.className = 'flex-1 py-2.5 text-xs font-bold text-emerald-400 border-b-2 border-emerald-500 transition';
+      } else if (tab === 'firebase') {
+        firebaseForm.classList.remove('hidden');
+        btnFb.className = 'flex-1 py-2.5 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 transition';
+      }
+    }
+
+    // Display Alert Message
+    function showAlert(msg, isSuccess = false) {
+      const alert = document.getElementById('authAlert');
+      alert.classList.remove('hidden', 'bg-rose-500/10', 'border-rose-500/30', 'text-rose-400', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+      if (isSuccess) {
+        alert.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+      } else {
+        alert.classList.add('bg-rose-500/10', 'border-rose-500/30', 'text-rose-400');
+      }
+      alert.textContent = msg;
+    }
+
+    // Toggle Password Visibility
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash text-xs';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye text-xs';
+      }
+    }
+
+    // Handle Login Submission
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('rememberMe').checked;
+
+      const users = getUsersDb();
+      let user = users[email];
+
+      if (!user) {
+        // If not in local db, create user entry automatically
+        const namePart = email.split('@')[0].replace('.', ' ');
+        user = {
+          uid: 'usr-' + Date.now(),
+          name: namePart.charAt(0).toUpperCase() + namePart.slice(1),
+          email: email,
+          vehicle: '2023 Honda Civic',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+          joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        };
+        users[email] = user;
+        saveUsersDb(users);
+      }
+
+      // Sync with Firebase if initialized
+      if (firebaseAuth) {
+        try {
+          await firebaseAuth.signInWithEmailAndPassword(email, password);
+        } catch {
+          // Fall back gracefully to stored database user
+        }
+      }
+
+      if (remember) {
+        setActiveSession(user);
+      }
+
+      applyUserSession(user);
+      document.getElementById('authScreen').classList.add('hidden');
+      showAlert('Signed in successfully!', true);
+    }
+
+    // Handle Sign Up Submission
+    async function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+      const vehicle = document.getElementById('signupVehicle').value.trim() || '2023 Honda Civic';
+      const password = document.getElementById('signupPassword').value;
+
+      const users = getUsersDb();
+      
+      const newUser = {
+        uid: 'usr-' + Date.now(),
+        name: name,
+        email: email,
+        vehicle: vehicle,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      };
+
+      users[email] = newUser;
+      saveUsersDb(users);
+
+      // Save to Firebase Firestore if connected
+      if (firestoreDb && firebaseAuth) {
+        try {
+          const cred = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+          await firestoreDb.collection('users').doc(cred.user.uid).set(newUser);
+        } catch (err) {
+          console.log('Firebase user creation note:', err.message);
+        }
+      }
+
+      setActiveSession(newUser);
+      applyUserSession(newUser);
+      document.getElementById('authScreen').classList.add('hidden');
+    }
+
+    // 1-Click Demo Login
+    function loginAsDemo() {
+      setActiveSession(DEMO_USER);
+      applyUserSession(DEMO_USER);
+      document.getElementById('authScreen').classList.add('hidden');
+    }
+
+    // Firebase Config Save
+    function handleFirebaseConfigSave(e) {
+      e.preventDefault();
+      const config = {
+        apiKey: document.getElementById('fbApiKey').value.trim(),
+        authDomain: document.getElementById('fbAuthDomain').value.trim(),
+        projectId: document.getElementById('fbProjectId').value.trim()
+      };
+
+      if (!config.apiKey || !config.projectId) {
+        showAlert('Please enter at least an API Key and Project ID to connect Firebase.');
+        return;
+      }
+
+      localStorage.setItem(STORAGE_FB_KEY, JSON.stringify(config));
+      initFirebase();
+      showAlert('Firebase Cloud Database configuration saved and connected!', true);
+    }
+
+    // Apply User Session to UI Header & Profile
+    function applyUserSession(user) {
+      if (!user) return;
+      document.getElementById('headerUserName').textContent = user.name;
+      document.getElementById('headerUserVehicle').textContent = user.vehicle;
+      document.getElementById('dropUserName').textContent = user.name;
+      document.getElementById('dropUserEmail').textContent = user.email;
+      document.getElementById('cardVehicleModel').textContent = user.vehicle;
+      document.getElementById('reportDriverName').textContent = user.name;
+      if (user.avatar) {
+        document.getElementById('headerUserAvatar').src = user.avatar;
+      }
+    }
+
+    // Toggle Header Account Menu
+    function toggleUserDropdown() {
+      document.getElementById('userDropdownMenu').classList.toggle('hidden');
+    }
+
+    // Logout Action
+    function handleLogout() {
+      setActiveSession(null);
+      document.getElementById('userDropdownMenu').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      switchAuthTab('login');
+    }
+
+    // Show Forgot Password Notice
+    function showForgotPassword() {
+      showAlert('A password reset link has been dispatched to your email address.', true);
+    }
+
+    // ================= APPLICATION STATE & NAVIGATION =================
+    let currentUnit = 'km';
+    let isTripMonitoring = false;
+    let isDrowsyAlert = false;
+    let liveSpeedValue = 68;
+
+    // View Switcher Function
+    function switchView(viewId) {
+      document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('bg-brand-500/20', 'text-brand-400', 'font-bold');
+        el.classList.add('text-slate-300');
+      });
+
+      const targetView = document.getElementById('view-' + viewId);
+      if (targetView) targetView.classList.remove('hidden');
+
+      const targetNav = document.getElementById('nav-' + viewId);
+      if (targetNav) {
+        targetNav.classList.add('bg-brand-500/20', 'text-brand-400', 'font-bold');
+      }
+
+      // Close mobile sidebar on selection
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+    }
+
+    // Toggle Unit (KM/H vs MPH)
+    function setUnit(unit) {
+      currentUnit = unit;
+      const unitKmBtn = document.getElementById('unitKm');
+      const unitMilesBtn = document.getElementById('unitMiles');
+
+      if (unit === 'km') {
+        unitKmBtn.className = 'px-2.5 py-1 rounded-md bg-brand-500 text-white font-bold transition';
+        unitMilesBtn.className = 'px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition';
+        document.querySelectorAll('.speed-unit').forEach(el => el.textContent = 'km/h');
+        document.getElementById('valSpeed').textContent = '68';
+        document.getElementById('liveSpeedBig').textContent = '68';
+      } else {
+        unitMilesBtn.className = 'px-2.5 py-1 rounded-md bg-brand-500 text-white font-bold transition';
+        unitKmBtn.className = 'px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition';
+        document.querySelectorAll('.speed-unit').forEach(el => el.textContent = 'mph');
+        document.getElementById('valSpeed').textContent = '42';
+        document.getElementById('liveSpeedBig').textContent = '42';
+      }
+    }
+
+    // Device Scan Simulation
+    function startDeviceScan() {
+      const box = document.getElementById('scanProgressBox');
+      const bar = document.getElementById('scanProgressBar');
+      const val = document.getElementById('scanProgressVal');
+      
+      box.classList.remove('hidden');
+      let progress = 0;
+      const timer = setInterval(() => {
+        progress += 20;
+        bar.style.width = progress + '%';
+        val.textContent = progress + '%';
+        if (progress >= 100) {
+          clearInterval(timer);
+          setTimeout(() => box.classList.add('hidden'), 1000);
+        }
+      }, 200);
+    }
+
+    // Toggle Trip Monitoring State
+    function toggleTripState() {
+      isTripMonitoring = !isTripMonitoring;
+      const btnText = document.getElementById('tripActionText');
+      const btn = document.getElementById('tripActionBtn');
+
+      if (isTripMonitoring) {
+        btnText.textContent = 'PAUSE MONITORING';
+        btn.className = 'px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-500/25 transition flex items-center gap-2';
+      } else {
+        btnText.textContent = 'START TRIP MONITORING';
+        btn.className = 'px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition flex items-center gap-2';
+      }
+    }
+
+    // Drowsiness Simulation Toggle
+    function toggleDrowsyTest() {
+      isDrowsyAlert = !isDrowsyAlert;
+      const badge = document.getElementById('drowsyBadge');
+      const text = document.getElementById('drowsyText');
+      const box = document.getElementById('faceBox');
+      const icon = document.getElementById('faceIcon');
+      const label = document.getElementById('eyeStatusLabel');
+
+      if (isDrowsyAlert) {
+        badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-2 pulse-red';
+        text.textContent = 'FATIGUE / DROWSY ALERT';
+        box.className = 'relative z-10 w-48 h-60 rounded-2xl border-2 border-rose-500 bg-rose-500/10 flex flex-col items-center justify-center space-y-4 transition-all duration-300';
+        icon.className = 'fa-solid fa-triangle-exclamation text-4xl text-rose-400 opacity-90';
+        label.textContent = 'EYES CLOSING (15%)';
+        label.className = 'text-xs font-bold text-rose-400 tracking-wider';
+      } else {
+        badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-2';
+        text.textContent = 'DRIVER ALERT';
+        box.className = 'relative z-10 w-48 h-60 rounded-2xl border-2 border-emerald-400 bg-emerald-500/5 flex flex-col items-center justify-center space-y-4 transition-all duration-300';
+        icon.className = 'fa-solid fa-user-check text-4xl text-emerald-400 opacity-80';
+        label.textContent = 'EYES OPEN (98%)';
+        label.className = 'text-xs font-bold text-emerald-400 tracking-wider';
+      }
+    }
+
+    // Mobile Sidebar Toggle
+    document.getElementById('toggleSidebar').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    });
+
+    // Real-Time Server Telemetry API Sync
+    async function syncServerTelemetry() {
+      try {
+        const res = await fetch('/api/telemetry');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.telemetry) {
+            const tel = data.telemetry;
+            liveSpeedValue = tel.speed;
+            const speedDisplay = currentUnit === 'km' ? tel.speed : Math.round(tel.speed * 0.621371);
+            
+            const elSpeed = document.getElementById('valSpeed');
+            const elSpeedBig = document.getElementById('liveSpeedBig');
+            if (elSpeed) elSpeed.textContent = speedDisplay;
+            if (elSpeedBig) elSpeedBig.textContent = speedDisplay;
+
+            const elRpm = document.getElementById('liveRpm');
+            if (elRpm) elRpm.textContent = tel.rpm.toLocaleString();
+
+            const elFuel = document.getElementById('valFuel');
+            if (elFuel) elFuel.textContent = `${tel.fuelLevel}%`;
+
+            const elLoad = document.getElementById('valEngineLoad');
+            if (elLoad) elLoad.textContent = `${tel.engineLoad}%`;
+
+            const elCoolant = document.getElementById('valCoolant');
+            if (elCoolant) elCoolant.textContent = `${tel.coolantTemp}°C`;
+
+            const elBattery = document.getElementById('valBattery');
+            if (elBattery) elBattery.textContent = `${tel.batteryVoltage}V`;
+          }
+        }
+      } catch (e) {
+        // Fallback to local simulation if server offline
+      }
+    }
+
+    setInterval(syncServerTelemetry, 1000);
+
+    // Initial Load & Auth Check
+    window.addEventListener('DOMContentLoaded', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg error:', err));
+      }
+      initFirebase();
+      const activeSession = getActiveSession();
+      if (activeSession) {
+        applyUserSession(activeSession);
+        document.getElementById('authScreen').classList.add('hidden');
+      } else {
+        document.getElementById('authScreen').classList.remove('hidden');
+      }
+      switchView('dashboard');
+    });
+  </script>
+  <!-- React App Vite Module Entrypoint -->
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+/* =============================================
+   DriveSense – Global Premium Animation System
+   ============================================= */
+
+/* ── Keyframes ── */
+@keyframes ds-fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ds-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ds-scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ds-slideInLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ds-slideInRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ds-goldPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3), 0 0 20px rgba(212, 175, 55, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(212, 175, 55, 0.6), 0 0 40px rgba(212, 175, 55, 0.25);
+  }
+}
+
+@keyframes ds-goldPulseText {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+@keyframes ds-loadBar {
+  0%   { width: 0%; }
+  40%  { width: 55%; }
+  70%  { width: 78%; }
+  90%  { width: 92%; }
+  100% { width: 100%; }
+}
+
+@keyframes ds-ripple {
+  0%   { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(2.2);  opacity: 0; }
+}
+
+@keyframes ds-ripple2 {
+  0%   { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(2.8);  opacity: 0; }
+}
+
+@keyframes ds-floatParticle {
+  0%   { transform: translateY(0)   translateX(0)   scale(1);   opacity: 0.6; }
+  33%  { transform: translateY(-18px) translateX(10px)  scale(1.1); opacity: 1; }
+  66%  { transform: translateY(-6px)  translateX(-8px)  scale(0.9); opacity: 0.8; }
+  100% { transform: translateY(0)   translateX(0)   scale(1);   opacity: 0.6; }
+}
+
+@keyframes ds-orbRotate {
+  from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+}
+
+@keyframes ds-shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+
+@keyframes ds-borderGlow {
+  0%, 100% { border-color: rgba(212, 175, 55, 0.25); }
+  50%       { border-color: rgba(212, 175, 55, 0.6); }
+}
+
+@keyframes ds-liveBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes ds-navActiveWave {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes ds-pageEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ds-drawerItemIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Reusable animation classes ── */
+.ds-animate-fadeInUp   { animation: ds-fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.ds-animate-fadeIn     { animation: ds-fadeIn 0.4s ease both; }
+.ds-animate-scaleIn    { animation: ds-scaleIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.ds-animate-slideLeft  { animation: ds-slideInLeft 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.ds-animate-slideRight { animation: ds-slideInRight 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.ds-animate-pageEnter  { animation: ds-pageEnter 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Stagger helpers */
+.ds-delay-100 { animation-delay: 0.1s; }
+.ds-delay-200 { animation-delay: 0.2s; }
+.ds-delay-300 { animation-delay: 0.3s; }
+.ds-delay-400 { animation-delay: 0.4s; }
+.ds-delay-500 { animation-delay: 0.5s; }
+.ds-delay-600 { animation-delay: 0.6s; }
+
+/* ── Gold card hover glow ── */
+.ds-card-glow {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+}
+.ds-card-glow:hover {
+  border-color: rgba(212, 175, 55, 0.55) !important;
+  box-shadow: 0 0 22px rgba(212, 175, 55, 0.2), 0 8px 32px rgba(0,0,0,0.8) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Animated gold border ── */
+.ds-border-animated {
+  animation: ds-borderGlow 2.8s ease-in-out infinite;
+}
+
+/* ── Shimmer highlight ── */
+.ds-shimmer {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 300px 100%;
+  animation: ds-shimmer 2s linear infinite;
+}
+
+/* ── Splash orb particles canvas ── */
+.ds-splash-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.9) 0%, rgba(212,175,55,0) 70%);
+  animation: ds-floatParticle linear infinite;
+  pointer-events: none;
+}
+
+/* ── Live trip dot blink ── */
+.ds-live-dot {
+  animation: ds-liveBlink 1.1s ease-in-out infinite;
+}
+
+/* ── Bottom nav active wave ── */
+.ds-nav-wave::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.35);
+  animation: ds-navActiveWave 1.2s ease-out infinite;
+}
+
+/* ── Gold pulse ring (splash / hero) ── */
+.ds-pulse-ring {
+  animation: ds-goldPulse 2s ease-in-out infinite;
+}
+
+/* ── Ripple rings ── */
+.ds-ripple-1 {
+  animation: ds-ripple 2s ease-out infinite;
+}
+.ds-ripple-2 {
+  animation: ds-ripple2 2s ease-out 0.7s infinite;
+}
+
+/* ── Glassmorphism helper ── */
+.ds-glass {
+  background: rgba(18, 18, 18, 0.72) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.22) !important;
+}
+
+/* ── Frosted App Bar ── */
+.ds-appbar-frosted {
+  background: rgba(8, 8, 8, 0.8) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.7) !important;
+}
+
+/* ── Gradient text ── */
+.ds-gold-text {
+  background: linear-gradient(135deg, #FFD700 0%, #D4AF37 55%, #E6C65C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Load bar animation ── */
+.ds-load-bar {
+  animation: ds-loadBar 1.9s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+/* ── Smooth page wrapper ── */
+.ds-page-wrapper {
+  animation: ds-pageEnter 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* ── Drawer item stagger ── */
+.ds-drawer-item {
+  animation: ds-drawerItemIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
+}

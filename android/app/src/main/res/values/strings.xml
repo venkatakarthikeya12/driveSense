@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DriveSense</string>
+    <string name="title_activity_main">DriveSense</string>
+    <string name="package_name">io.drivesense.app</string>
+    <string name="custom_url_scheme">io.drivesense.app</string>
+</resources>
