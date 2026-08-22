@@ -30,6 +30,7 @@ import {
   Gauge,
   Compass,
   Download,
+  Bell,
 } from 'lucide-react';
 import Login from './components/Login';
 import ForgotPassword from './components/auth/ForgotPassword';
@@ -60,31 +61,31 @@ import { DriveSenseProvider, useDriveSense } from '../context/DriveSenseContext'
 import { BluetoothDeviceOption } from '../services/obd2Service';
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
-const darkGoldTheme = createTheme({
+const darkBlueTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#D4AF37',
-      light: '#FFD700',
-      dark: '#8A6D1D',
-      contrastText: '#050505',
+      main: '#0066FF',
+      light: '#0088FF',
+      dark: '#0044CC',
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#FFD700',
-      contrastText: '#050505',
+      main: '#0088FF',
+      contrastText: '#FFFFFF',
     },
     background: {
-      default: '#050505',
-      paper: '#121212',
+      default: '#030712',
+      paper: '#0B0F19',
     },
     text: {
       primary: '#FFFFFF',
-      secondary: '#B8B8B8',
-      disabled: '#666666',
+      secondary: '#94A3B8',
+      disabled: '#64748B',
     },
-    success: { main: '#35C759' },
-    warning: { main: '#D4AF37' },
-    error: { main: '#E53935' },
+    success: { main: '#10B981' },
+    warning: { main: '#F59E0B' },
+    error: { main: '#EF4444' },
   },
   typography: {
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -97,8 +98,8 @@ const darkGoldTheme = createTheme({
     '0 4px 20px rgba(0,0,0,0.8)',
     '0 4px 20px rgba(0,0,0,0.9)',
     '0 8px 30px rgba(0,0,0,0.95)',
-    '0 0 15px rgba(212,175,55,0.25)',
-    ...Array(20).fill('0 0 20px rgba(212,175,55,0.2)'),
+    '0 0 15px rgba(0,102,255,0.25)',
+    ...Array(20).fill('0 0 20px rgba(0,102,255,0.2)'),
   ] as unknown as Shadows,
 });
 
@@ -518,9 +519,9 @@ function AppContent() {
 
   const navItemsMobile = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, view: 'dashboard' as MainView },
-    { id: 'live-monitoring', label: 'Live', icon: Gauge, view: 'live-monitoring' as MainView },
-    { id: 'intelligent-monitoring', label: 'Vehicle', icon: Activity, view: 'intelligent-monitoring' as MainView },
-    { id: 'trip-history', label: 'Trips', icon: History, view: 'trip-history' as MainView },
+    { id: 'live-monitoring', label: 'Live Monitor', icon: Gauge, view: 'live-monitoring' as MainView },
+    { id: 'trip-history', label: 'Trips', icon: MapPin, view: 'trip-history' as MainView },
+    { id: 'coaching', label: 'Alerts', icon: Bell, view: 'coaching' as MainView, badge: true },
     { id: 'settings', label: 'Settings', icon: Settings, view: 'settings' as MainView },
   ];
 
@@ -544,9 +545,9 @@ function AppContent() {
             onClick={() => setDrawerOpen(!drawerOpen)}
             sx={{
               mr: 2,
-              color: '#D4AF37',
+              color: '#0088FF',
               transition: 'all 0.2s ease',
-              '&:hover': { color: '#FFD700', bgcolor: 'rgba(212,175,55,0.1)', transform: 'scale(1.12)' },
+              '&:hover': { color: '#0066FF', bgcolor: 'rgba(0,102,255,0.1)', transform: 'scale(1.12)' },
             }}
           >
             <Menu />
@@ -554,32 +555,36 @@ function AppContent() {
 
           <Typography
             variant="h6"
-            className="ds-gold-text"
-            sx={{ flexGrow: 1, fontWeight: 800, letterSpacing: 1.5 }}
+            sx={{ flexGrow: 1, fontWeight: 900, letterSpacing: 1.2 }}
           >
-            DriveSense
+            <span style={{ color: '#FFFFFF' }}>Drive</span>
+            <span style={{ color: '#0066FF' }}>Sense</span>
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* Install App chip */}
+            {/* Install App chip matching image */}
             <Chip
-              icon={<Download size={13} color="#050505" />}
+              icon={<Download size={13} color="#0066FF" />}
               label="Install App"
               size="small"
+              variant="outlined"
               onClick={installApp}
               sx={{
                 cursor: 'pointer',
-                bgcolor: '#D4AF37',
-                color: '#050505',
-                fontWeight: 800,
+                bgcolor: 'rgba(0, 102, 255, 0.08)',
+                borderColor: '#0066FF',
+                color: '#0066FF',
+                fontWeight: 700,
                 fontSize: 11,
+                borderRadius: 4,
+                px: 0.5,
                 transition: 'all 0.2s ease',
-                '&:hover': { bgcolor: '#FFD700', boxShadow: '0 0 12px rgba(255,215,0,0.5)', transform: 'scale(1.05)' },
+                '&:hover': { bgcolor: 'rgba(0, 102, 255, 0.2)', boxShadow: '0 0 12px rgba(0, 102, 255, 0.4)' },
                 '& .MuiChip-icon': { ml: '6px' },
               }}
             />
 
-            {/* OBD-II status chip */}
+            {/* OBD-II Disconnected status chip matching image */}
             <Chip
               icon={
                 <Box
@@ -588,18 +593,14 @@ function AppContent() {
                     width: 7,
                     height: 7,
                     borderRadius: '50%',
-                    bgcolor: isCarConnected
-                      ? '#35C759'
-                      : connectionStatus === 'scanning' || connectionStatus === 'pairing'
-                        ? '#D4AF37'
-                        : '#555',
-                    boxShadow: isCarConnected ? '0 0 8px #35C759' : 'none',
+                    bgcolor: isCarConnected ? '#10B981' : '#EF4444',
+                    boxShadow: isCarConnected ? '0 0 8px #10B981' : '0 0 8px #EF4444',
                   }}
                 />
               }
               label={
                 isCarConnected
-                  ? 'OBD-II Connected'
+                  ? 'Connected'
                   : connectionStatus === 'scanning'
                     ? 'Scanning…'
                     : connectionStatus === 'pairing'
@@ -610,14 +611,15 @@ function AppContent() {
               onClick={() => setCurrentView('car-connection')}
               sx={{
                 cursor: 'pointer',
-                bgcolor: 'rgba(18,18,18,0.9)',
+                bgcolor: 'rgba(3, 7, 18, 0.9)',
                 backdropFilter: 'blur(8px)',
-                color: isCarConnected ? '#35C759' : '#B8B8B8',
-                border: `1px solid ${isCarConnected ? 'rgba(53,199,89,0.45)' : 'rgba(212,175,55,0.25)'}`,
+                color: isCarConnected ? '#10B981' : '#EF4444',
+                border: `1px solid ${isCarConnected ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
                 fontWeight: 600,
                 fontSize: 11,
+                borderRadius: 4,
                 transition: 'all 0.2s ease',
-                '&:hover': { borderColor: '#D4AF37', color: '#FFD700' },
+                '&:hover': { borderColor: '#EF4444', color: '#EF4444' },
                 '& .MuiChip-icon': { ml: '6px' },
               }}
             />
@@ -829,14 +831,14 @@ function AppContent() {
           display: { xs: 'flex', md: 'none' },
           justifyContent: 'space-around',
           alignItems: 'center',
-          background: 'rgba(5,5,5,0.88)',
+          background: 'rgba(3, 7, 18, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(212,175,55,0.25)',
+          borderTop: '1px solid rgba(0, 102, 255, 0.3)',
           py: 1,
           px: 0.5,
           zIndex: 1200,
-          boxShadow: '0 -4px 30px rgba(0,0,0,0.9)',
+          boxShadow: '0 -4px 30px rgba(0,0,0,0.95)',
         }}
       >
         {navItemsMobile.map((item) => {
@@ -853,9 +855,10 @@ function AppContent() {
                 flex: 1,
                 py: 0.5,
                 cursor: 'pointer',
-                color: isSelected ? '#FFD700' : '#666',
+                color: isSelected ? '#0088FF' : '#64748B',
                 transition: 'all 0.25s cubic-bezier(0.22,1,0.36,1)',
                 transform: isSelected ? 'translateY(-2px)' : 'none',
+                position: 'relative',
               }}
             >
               {/* Icon with glow wave ring */}
@@ -867,8 +870,8 @@ function AppContent() {
                   justifyContent: 'center',
                   p: 0.85,
                   borderRadius: '50%',
-                  bgcolor: isSelected ? 'rgba(212,175,55,0.18)' : 'transparent',
-                  boxShadow: isSelected ? '0 0 16px rgba(212,175,55,0.4), 0 0 4px rgba(212,175,55,0.2)' : 'none',
+                  bgcolor: isSelected ? 'rgba(0, 102, 255, 0.18)' : 'transparent',
+                  boxShadow: isSelected ? '0 0 16px rgba(0, 102, 255, 0.5), 0 0 4px rgba(0, 102, 255, 0.3)' : 'none',
                   mb: 0.3,
                   transition: 'all 0.25s ease',
                   '&::after': isSelected
@@ -877,26 +880,55 @@ function AppContent() {
                       position: 'absolute',
                       inset: 0,
                       borderRadius: '50%',
-                      background: 'rgba(212,175,55,0.3)',
+                      background: 'rgba(0, 102, 255, 0.3)',
                       animation: 'ds-navActiveWave 1.4s ease-out infinite',
                     }
                     : {},
                 }}
               >
-                <item.icon size={22} color={isSelected ? '#FFD700' : '#666'} />
+                <item.icon size={22} color={isSelected ? '#0088FF' : '#94A3B8'} />
+                {item.badge && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      bgcolor: '#EF4444',
+                      boxShadow: '0 0 6px #EF4444',
+                    }}
+                  />
+                )}
               </Box>
               <Typography
                 variant="caption"
                 sx={{
                   fontSize: '0.67rem',
-                  fontWeight: isSelected ? 700 : 500,
-                  color: isSelected ? '#FFD700' : '#666',
+                  fontWeight: isSelected ? 800 : 500,
+                  color: isSelected ? '#0088FF' : '#94A3B8',
                   letterSpacing: isSelected ? 0.5 : 0.2,
                   transition: 'all 0.25s ease',
                 }}
               >
                 {item.label}
               </Typography>
+
+              {/* Active top line bar indicator */}
+              {isSelected && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -8,
+                    width: 24,
+                    height: 3,
+                    borderRadius: 2,
+                    bgcolor: '#0088FF',
+                    boxShadow: '0 0 10px #0088FF',
+                  }}
+                />
+              )}
             </Box>
           );
         })}
@@ -908,7 +940,7 @@ function AppContent() {
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <ThemeProvider theme={darkGoldTheme}>
+    <ThemeProvider theme={darkBlueTheme}>
       <AuthProvider>
         <DriveSenseProvider>
           <AppContent />

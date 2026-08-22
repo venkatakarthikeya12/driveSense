@@ -3,82 +3,82 @@
 :root {
   --font-size: 16px;
   
-  /* Black + Royal Gold Palette */
-  --background: #050505;
-  --secondary-bg: #0B0B0B;
+  /* Electric Neon Blue + Pitch Dark Palette */
+  --background: #030712;
+  --secondary-bg: #0B0F19;
   --foreground: #FFFFFF;
-  --card: #121212;
+  --card: #0F172A;
   --card-foreground: #FFFFFF;
-  --popover: #121212;
+  --popover: #0F172A;
   --popover-foreground: #FFFFFF;
   
-  --primary: #D4AF37;
-  --primary-bright: #FFD700;
-  --primary-soft: #E6C65C;
-  --primary-dark: #8A6D1D;
-  --primary-foreground: #050505;
+  --primary: #0066FF;
+  --primary-bright: #0088FF;
+  --primary-soft: #38BDF8;
+  --primary-dark: #0044CC;
+  --primary-foreground: #FFFFFF;
   
-  --secondary: #181818;
-  --secondary-foreground: #B8B8B8;
+  --secondary: #1E293B;
+  --secondary-foreground: #94A3B8;
   
-  --muted: #181818;
-  --muted-foreground: #B8B8B8;
-  --disabled-text: #666666;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --disabled-text: #64748B;
   
-  --accent: #181818;
-  --accent-foreground: #D4AF37;
+  --accent: #1E293B;
+  --accent-foreground: #0066FF;
   
-  --destructive: #E53935;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --success: #35C759;
-  --warning: #D4AF37;
-  --critical: #E53935;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --critical: #EF4444;
   
-  --border: rgba(212, 175, 55, 0.25);
-  --border-gold: #D4AF37;
-  --input: #121212;
-  --input-background: #181818;
-  --switch-background: #333333;
-  --ring: #D4AF37;
+  --border: rgba(0, 102, 255, 0.25);
+  --border-blue: #0066FF;
+  --input: #0F172A;
+  --input-background: #1E293B;
+  --switch-background: #334155;
+  --ring: #0066FF;
   
-  --chart-1: #D4AF37;
-  --chart-2: #FFD700;
-  --chart-3: #E6C65C;
-  --chart-4: #8A6D1D;
-  --chart-5: #35C759;
+  --chart-1: #0066FF;
+  --chart-2: #0088FF;
+  --chart-3: #38BDF8;
+  --chart-4: #0044CC;
+  --chart-5: #10B981;
   
   --radius: 0.75rem;
   
-  --sidebar: #050505;
+  --sidebar: #030712;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #D4AF37;
-  --sidebar-primary-foreground: #050505;
-  --sidebar-accent: #121212;
-  --sidebar-accent-foreground: #D4AF37;
-  --sidebar-border: rgba(212, 175, 55, 0.2);
-  --sidebar-ring: #D4AF37;
+  --sidebar-primary: #0066FF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #0F172A;
+  --sidebar-accent-foreground: #0066FF;
+  --sidebar-border: rgba(0, 102, 255, 0.2);
+  --sidebar-ring: #0066FF;
 }
 
 .dark {
-  --background: #050505;
+  --background: #030712;
   --foreground: #FFFFFF;
-  --card: #121212;
+  --card: #0F172A;
   --card-foreground: #FFFFFF;
-  --popover: #121212;
+  --popover: #0F172A;
   --popover-foreground: #FFFFFF;
-  --primary: #D4AF37;
-  --primary-foreground: #050505;
-  --secondary: #181818;
-  --secondary-foreground: #B8B8B8;
-  --muted: #181818;
-  --muted-foreground: #B8B8B8;
-  --accent: #181818;
-  --accent-foreground: #D4AF37;
-  --destructive: #E53935;
+  --primary: #0066FF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1E293B;
+  --secondary-foreground: #94A3B8;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --accent: #1E293B;
+  --accent-foreground: #0066FF;
+  --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(212, 175, 55, 0.25);
-  --input: #121212;
-  --ring: #D4AF37;
+  --border: rgba(0, 102, 255, 0.25);
+  --input: #0F172A;
+  --ring: #0066FF;
 }
 
 @theme inline {
@@ -124,12 +124,12 @@
 
 @layer base {
   * {
-    border-color: rgba(212, 175, 55, 0.2);
-    outline-color: rgba(212, 175, 55, 0.4);
+    border-color: rgba(0, 102, 255, 0.2);
+    outline-color: rgba(0, 102, 255, 0.4);
   }
 
   body {
-    background-color: #050505;
+    background-color: #030712;
     color: #FFFFFF;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
@@ -143,65 +143,50 @@
   }
 }
 
-/* Custom Automotive Utility Classes */
-.gold-glow {
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+/* Custom Electric Neon Blue Utility Classes */
+.blue-glow {
+  box-shadow: 0 0 15px rgba(0, 102, 255, 0.35);
 }
 
-.gold-glow-intense {
-  box-shadow: 0 0 25px rgba(212, 175, 55, 0.45);
+.blue-glow-intense {
+  box-shadow: 0 0 25px rgba(0, 102, 255, 0.6);
 }
 
-.gold-border {
-  border: 1px solid rgba(212, 175, 55, 0.3);
+.blue-border {
+  border: 1px solid rgba(0, 102, 255, 0.4);
 }
 
-.gold-gradient-text {
-  background: linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #8A6D1D 100%);
+.blue-gradient-text {
+  background: linear-gradient(135deg, #0088FF 0%, #0066FF 50%, #0044CC 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gold-button-primary {
-  background-color: #D4AF37;
-  color: #050505;
+.blue-button-primary {
+  background-color: #0066FF;
+  color: #FFFFFF;
   font-weight: 700;
   transition: all 0.2s ease-in-out;
 }
 
-.gold-button-primary:hover {
-  background-color: #FFD700;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+.blue-button-primary:hover {
+  background-color: #0088FF;
+  box-shadow: 0 0 18px rgba(0, 102, 255, 0.5);
   transform: translateY(-1px);
 }
 
-.gold-button-primary:active {
+.blue-button-primary:active {
   transform: translateY(1px);
 }
 
-.gold-button-secondary {
-  background-color: #0B0B0B;
-  border: 1px solid #D4AF37;
-  color: #FFFFFF;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-}
-
-.gold-button-secondary:hover {
-  background-color: #121212;
-  border-color: #FFD700;
-  color: #FFD700;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
-}
-
 .card-luxury {
-  background-color: #121212;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background-color: #0F172A;
+  border: 1px solid rgba(0, 102, 255, 0.25);
   border-radius: 0.75rem;
   transition: all 0.3s ease;
 }
 
 .card-luxury:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 12px rgba(212, 175, 55, 0.15);
+  border-color: rgba(0, 102, 255, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 102, 255, 0.25);
 }

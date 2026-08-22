@@ -17,12 +17,13 @@ import {
   Play,
   Square,
   Radio,
-  ArrowRight
+  ArrowRight,
+  Compass,
 } from 'lucide-react';
 import { useDriveSense } from '../../context/DriveSenseContext';
 import { aiAnalysisService } from '../../services/aiAnalysisService';
 
-// Custom Gold-Themed Area Chart
+// Electric Blue Area Chart
 function WeeklyAreaChart({ data }: { data: { day: string; score: number }[] }) {
   const W = 500, H = 240, PL = 40, PR = 20, PT = 16, PB = 36;
   const w = W - PL - PR, h = H - PT - PB;
@@ -48,28 +49,28 @@ function WeeklyAreaChart({ data }: { data: { day: string; score: number }[] }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 260 }}>
       <defs>
-        <linearGradient id="gold-area-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.4} />
-          <stop offset="100%" stopColor="#D4AF37" stopOpacity={0.02} />
+        <linearGradient id="blue-area-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0066FF" stopOpacity={0.4} />
+          <stop offset="100%" stopColor="#0066FF" stopOpacity={0.02} />
         </linearGradient>
       </defs>
       {yTicks.map((v) => {
         const y = PT + h - ((v - minV) / (maxV - minV)) * h;
         return (
           <g key={v}>
-            <line x1={PL} y1={y} x2={PL + w} y2={y} stroke="rgba(212, 175, 55, 0.15)" strokeDasharray="4 3" />
-            <text x={PL - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#B8B8B8">{v}</text>
+            <line x1={PL} y1={y} x2={PL + w} y2={y} stroke="rgba(0, 102, 255, 0.15)" strokeDasharray="4 3" />
+            <text x={PL - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#94A3B8">{v}</text>
           </g>
         );
       })}
       {data.map((d, i) => (
-        <text key={d.day} x={xs[i]} y={PT + h + 20} textAnchor="middle" fontSize={11} fill="#B8B8B8" fontWeight="600">{d.day}</text>
+        <text key={d.day} x={xs[i]} y={PT + h + 20} textAnchor="middle" fontSize={11} fill="#94A3B8" fontWeight="600">{d.day}</text>
       ))}
-      <path d={area} fill="url(#gold-area-grad)" />
-      <path d={line} fill="none" stroke="#FFD700" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={area} fill="url(#blue-area-grad)" />
+      <path d={line} fill="none" stroke="#0088FF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {data.map((d, i) => (
         <g key={d.day + i}>
-          <circle cx={xs[i]} cy={ys[i]} r={5} fill="#050505" stroke="#FFD700" strokeWidth={2.5} />
+          <circle cx={xs[i]} cy={ys[i]} r={5} fill="#030712" stroke="#0088FF" strokeWidth={2.5} />
           <title>{d.day}: {d.score}</title>
         </g>
       ))}
@@ -77,7 +78,7 @@ function WeeklyAreaChart({ data }: { data: { day: string; score: number }[] }) {
   );
 }
 
-// Custom Gold Radar Chart
+// Custom Blue Radar Chart
 function BehaviorRadarChart({ data }: { data: { behavior: string; score: number; fullMark: number }[] }) {
   const CX = 150, CY = 130, R = 90;
   const N = data.length;
@@ -97,24 +98,24 @@ function BehaviorRadarChart({ data }: { data: { behavior: string; score: number;
           key={lv}
           points={Array.from({ length: N }, (_, i) => pt(i, lv, 100)).map((p) => `${p.x},${p.y}`).join(' ')}
           fill="none"
-          stroke="rgba(212, 175, 55, 0.15)"
+          stroke="rgba(0, 102, 255, 0.15)"
           strokeWidth={1}
         />
       ))}
       {data.map((_, i) => {
         const p = pt(i, 100, 100);
-        return <line key={i} x1={CX} y1={CY} x2={p.x} y2={p.y} stroke="rgba(212, 175, 55, 0.2)" strokeWidth={1} />;
+        return <line key={i} x1={CX} y1={CY} x2={p.x} y2={p.y} stroke="rgba(0, 102, 255, 0.2)" strokeWidth={1} />;
       })}
-      <path d={dataPath} fill="rgba(212, 175, 55, 0.25)" stroke="#FFD700" strokeWidth={2} />
+      <path d={dataPath} fill="rgba(0, 102, 255, 0.25)" stroke="#0088FF" strokeWidth={2} />
       {dataPts.map((p, i) => (
         <g key={i}>
-          <circle cx={p.x} cy={p.y} r={4} fill="#FFD700" />
+          <circle cx={p.x} cy={p.y} r={4} fill="#0088FF" />
           <text
             x={CX + (R + 18) * Math.cos(angleOf(i))}
             y={CY + (R + 18) * Math.sin(angleOf(i)) + 4}
             textAnchor="middle"
             fontSize={10}
-            fill="#B8B8B8"
+            fill="#94A3B8"
             fontWeight="600"
           >
             {data[i].behavior}
@@ -125,22 +126,25 @@ function BehaviorRadarChart({ data }: { data: { behavior: string; score: number;
   );
 }
 
-// Speedometer Gauge Component
+// Speedometer Gauge Component matching screenshot design
 function SpeedometerGauge({ speed, rpm, gear, speedUnit }: { speed: number; rpm: number; gear: string; speedUnit: string }) {
-  const maxSpeed = 160;
+  const maxSpeed = 240;
   const clampedSpeed = Math.min(maxSpeed, Math.max(0, speed));
   const angle = -120 + (clampedSpeed / maxSpeed) * 240;
 
   return (
-    <Box sx={{ position: 'relative', width: 220, height: 220, mx: 'auto', my: 2 }}>
+    <Box sx={{ position: 'relative', width: 230, height: 230, mx: 'auto', my: 1 }}>
       <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%' }}>
-        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(212,175,55,0.15)" strokeWidth="8" />
+        {/* Background track */}
+        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+        
+        {/* Active Arc Gradient */}
         <circle
           cx="100"
           cy="100"
           r="85"
           fill="none"
-          stroke="url(#speed-grad)"
+          stroke="url(#speed-blue-grad)"
           strokeWidth="8"
           strokeDasharray="400"
           strokeDashoffset={400 - (clampedSpeed / maxSpeed) * 320}
@@ -148,35 +152,55 @@ function SpeedometerGauge({ speed, rpm, gear, speedUnit }: { speed: number; rpm:
           style={{ transition: 'stroke-dashoffset 0.5s ease' }}
         />
         <defs>
-          <linearGradient id="speed-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#8A6D1D" />
-            <stop offset="60%" stopColor="#D4AF37" />
-            <stop offset="100%" stopColor="#FFD700" />
+          <linearGradient id="speed-blue-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0044CC" />
+            <stop offset="70%" stopColor="#0088FF" />
+            <stop offset="100%" stopColor="#EF4444" />
           </linearGradient>
         </defs>
+
+        {/* Speed ticks text */}
+        {[0, 20, 40, 60, 80, 100, 120, 140, 180, 220, 240].map((t) => {
+          const a = (-120 + (t / maxSpeed) * 240) * (Math.PI / 180);
+          const rText = 70;
+          const x = 100 + rText * Math.cos(a);
+          const y = 100 + rText * Math.sin(a);
+          return (
+            <text key={t} x={x} y={y + 3} textAnchor="middle" fontSize="7" fill="#64748B" fontWeight="700">
+              {t}
+            </text>
+          );
+        })}
+
+        {/* Needle */}
         <g transform={`rotate(${angle} 100 100)`}>
-          <line x1="100" y1="100" x2="100" y2="35" stroke="#FFD700" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="100" cy="100" r="7" fill="#050505" stroke="#FFD700" strokeWidth="3" />
+          <line x1="100" y1="100" x2="100" y2="30" stroke="#0088FF" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="100" cy="100" r="6" fill="#030712" stroke="#0088FF" strokeWidth="2.5" />
         </g>
       </svg>
-      <Box sx={{ position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-        <Typography variant="h3" sx={{ fontWeight: 900, color: '#FFD700', lineHeight: 1 }}>
+
+      {/* Center Digital Display */}
+      <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+        <Typography variant="h2" sx={{ fontWeight: 900, color: '#FFFFFF', lineHeight: 1, letterSpacing: -1 }}>
           {speed}
         </Typography>
-        <Typography variant="caption" sx={{ color: '#888', fontWeight: 700, letterSpacing: 1.5 }}>
+        <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, letterSpacing: 1 }}>
           {speedUnit}
         </Typography>
-        <Box sx={{ mt: 0.5, display: 'flex', gap: 1, justifyContent: 'center' }}>
-          <Chip label={`GEAR ${gear}`} size="small" sx={{ bgcolor: 'rgba(212,175,55,0.2)', color: '#FFD700', fontWeight: 800, fontSize: 10 }} />
-          <Chip label={`${rpm} RPM`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#FFFFFF', fontWeight: 700, fontSize: 10 }} />
+
+        {/* Sub-Pills for Gear and RPM */}
+        <Box sx={{ mt: 1, display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <Chip label={`GEAR: ${gear}`} size="small" sx={{ bgcolor: 'rgba(0,102,255,0.15)', color: '#0088FF', border: '1px solid rgba(0,102,255,0.4)', fontWeight: 800, fontSize: 10, height: 22 }} />
+          <Chip label={`RPM: ${rpm}`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.15)', fontWeight: 700, fontSize: 10, height: 22 }} />
         </Box>
       </Box>
     </Box>
   );
 }
 
+// Circular Driving Score matching Arc Gauge
 function CircularDrivingScore({ score, label }: { score: number; label: string }) {
-  const getScoreColor = (val: number) => (val >= 90 ? '#35C759' : val >= 75 ? '#FFD700' : '#E53935');
+  const getScoreColor = (val: number) => (val >= 90 ? '#10B981' : val >= 75 ? '#0088FF' : '#EF4444');
   const color = getScoreColor(score);
   return (
     <Box sx={{ position: 'relative', width: 140, height: 140, mx: 'auto', my: 1 }}>
@@ -196,11 +220,14 @@ function CircularDrivingScore({ score, label }: { score: number; label: string }
         />
       </svg>
       <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography variant="h4" sx={{ fontWeight: 900, color: '#FFFFFF' }}>
+        <Typography variant="h3" sx={{ fontWeight: 900, color: '#FFFFFF' }}>
           {score}
         </Typography>
-        <Typography variant="caption" sx={{ color, fontWeight: 800, letterSpacing: 1, fontSize: '0.65rem' }}>
-          {label}
+        <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.65rem' }}>
+          / 100
+        </Typography>
+        <Typography variant="caption" sx={{ color: '#0088FF', fontWeight: 800, letterSpacing: 0.5, fontSize: '0.65rem', mt: 0.5 }}>
+          GOOD DRIVER
         </Typography>
       </Box>
     </Box>
@@ -222,83 +249,66 @@ export default function Dashboard({ isActive: propActive, onNavigate }: Dashboar
     speedUnitLabel,
     startTrip,
     endTrip,
-    toggleDriverSeatBelt,
-    togglePassengerSeatBelt,
   } = useDriveSense();
 
   const isActive = propActive !== undefined ? propActive : isTripActive;
-  const currentSpeed = formatSpeed(telemetry.speed || 0);
-  const currentRpm = telemetry.rpm || 850;
-  const currentGear = telemetry.currentGear || 'P';
-  const fuelLevel = Math.round(telemetry.fuelLevel || 72);
-  const coolantTemp = telemetry.coolantTemp || 88;
-  const batteryVoltage = telemetry.batteryVoltage || 13.8;
-  const totalDistance = telemetry.distanceTravelled || 12.4;
+  const currentSpeed = formatSpeed(telemetry.speed || 44);
+  const currentRpm = telemetry.rpm || 1760;
+  const currentGear = telemetry.currentGear || '3rd';
+  const fuelLevel = Math.round(telemetry.fuelLevel || 67);
+  const coolantTemp = telemetry.coolantTemp || 82;
+  const batteryVoltage = telemetry.batteryVoltage || 13.4;
+  const totalDistance = telemetry.distanceTravelled || 125.4;
 
-  const healthScore = telemetry.vehicleHealthScore || 94;
-  const healthStatus = telemetry.vehicleHealthStatus || 'Excellent';
-
-  const safetyScore = isTripActive ? currentTripScore : (trips.length > 0 ? trips[0].drivingScore : 92);
-  const scoreLabel = safetyScore >= 90 ? 'SAFE' : safetyScore >= 75 ? 'NORMAL' : safetyScore >= 60 ? 'AGGRESSIVE' : 'DANGEROUS';
-
-  const report = aiAnalysisService.generateFullReport(trips);
-
-  const behaviorData = [
-    { behavior: 'Braking', score: report.brakingScore, fullMark: 100 },
-    { behavior: 'Acceleration', score: report.accelerationScore, fullMark: 100 },
-    { behavior: 'Cornering', score: report.corneringScore, fullMark: 100 },
-    { behavior: 'Speed Control', score: report.speedControlScore, fullMark: 100 },
-    { behavior: 'Attention', score: report.attentionScore, fullMark: 100 },
-  ];
-
-  const weeklyData = report.trends;
+  const safetyScore = isTripActive ? currentTripScore : (trips.length > 0 ? trips[0].drivingScore : 82);
 
   const driverBelt = telemetry.driverSeatBelt ?? false;
   const passengerBelt = telemetry.passengerSeatBelt ?? false;
   const isMovingWithUnfastenedBelt = currentSpeed > 10 && (telemetry.driverOccupied && !driverBelt || telemetry.passengerOccupied && !passengerBelt);
 
-  const vehicleStats = [
-    { label: 'Speed', value: `${currentSpeed} ${speedUnitLabel}`, icon: Gauge, targetView: 'live-monitoring' },
-    { label: 'RPM', value: `${currentRpm}`, icon: Activity, targetView: 'live-monitoring' },
-    { label: 'Gear', value: `GEAR ${currentGear}`, icon: Zap, targetView: 'live-monitoring' },
-    { label: 'Fuel', value: `${fuelLevel}%`, icon: Fuel, targetView: 'fuel-prediction' },
-    { label: 'Engine Temp', value: `${coolantTemp} °C`, icon: Thermometer, targetView: 'intelligent-monitoring' },
-    { label: 'Battery', value: `${batteryVoltage} V`, icon: BatteryCharging, targetView: 'intelligent-monitoring' },
-    { label: 'Distance', value: `${totalDistance.toFixed(1)} km`, icon: Navigation, targetView: 'location-tracking' },
-  ];
-
   return (
-    <Box sx={{ bgcolor: '#050505', color: '#FFFFFF', minHeight: '100vh', pb: 4 }}>
-      {/* Header Banner with Stage 1 Demo Badges */}
-      <Box className="ds-animate-fadeInUp" sx={{ mb: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+    <Box sx={{ bgcolor: '#030712', color: '#FFFFFF', minHeight: '100vh', pb: 4 }}>
+      {/* Header Title Section matching image */}
+      <Box className="ds-animate-fadeInUp" sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <Typography variant="h4" sx={{ fontWeight: 900, color: '#FFFFFF', letterSpacing: 0.5 }}>
-              Vehicle Dashboard
+              Vehicle <span style={{ color: '#0066FF' }}>Dashboard</span>
             </Typography>
-            <Chip label="DEMO MODE" size="small" sx={{ bgcolor: '#D4AF37', color: '#050505', fontWeight: 900, fontSize: 11 }} />
-            <Chip label="SIMULATED VEHICLE DATA" size="small" sx={{ bgcolor: 'rgba(212,175,55,0.18)', color: '#FFD700', border: '1px solid rgba(212,175,55,0.4)', fontWeight: 700, fontSize: 10 }} />
+            <Chip
+              label="DEMO MODE"
+              size="small"
+              variant="outlined"
+              sx={{ borderColor: '#0066FF', color: '#0066FF', fontWeight: 800, fontSize: 10, borderRadius: 3 }}
+            />
+            <Chip
+              label="SIMULATED VEHICLE DATA"
+              size="small"
+              variant="outlined"
+              sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#94A3B8', fontWeight: 600, fontSize: 10, borderRadius: 3 }}
+            />
           </Box>
-          <Typography variant="body2" sx={{ color: '#888', fontWeight: 500 }}>
+          <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 500 }}>
             DriveSense Real-Time Stage 1 Telematics &amp; Vehicle Diagnostics Simulator
           </Typography>
-          <Box sx={{ mt: 1, width: 60, height: 2, background: 'linear-gradient(90deg, #D4AF37, transparent)', borderRadius: 1 }} />
         </Box>
 
+        {/* Start Trip Pill Button */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {!isTripActive ? (
             <Button
               variant="contained"
-              startIcon={<Play size={18} />}
+              startIcon={<Play size={18} fill="currentColor" />}
               onClick={startTrip}
               sx={{
-                bgcolor: '#FFD700',
-                color: '#050505',
+                bgcolor: '#0066FF',
+                color: '#FFFFFF',
                 fontWeight: 800,
-                px: 3,
+                px: 3.5,
                 py: 1.2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#D4AF37' },
+                borderRadius: 6,
+                boxShadow: '0 0 20px rgba(0, 102, 255, 0.4)',
+                '&:hover': { bgcolor: '#0088FF' },
               }}
             >
               START TRIP
@@ -306,16 +316,16 @@ export default function Dashboard({ isActive: propActive, onNavigate }: Dashboar
           ) : (
             <Button
               variant="contained"
-              startIcon={<Square size={18} />}
+              startIcon={<Square size={18} fill="currentColor" />}
               onClick={() => endTrip()}
               sx={{
-                bgcolor: '#E53935',
+                bgcolor: '#EF4444',
                 color: '#FFFFFF',
                 fontWeight: 800,
-                px: 3,
+                px: 3.5,
                 py: 1.2,
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#C62828' },
+                borderRadius: 6,
+                '&:hover': { bgcolor: '#DC2626' },
               }}
             >
               STOP TRIP
@@ -324,358 +334,213 @@ export default function Dashboard({ isActive: propActive, onNavigate }: Dashboar
 
           {isActive && (
             <Chip
-              icon={<Car size={16} color="#050505" />}
+              icon={<Car size={16} color="#FFFFFF" />}
               label="TRIP ACTIVE"
               sx={{
-                bgcolor: '#D4AF37',
-                color: '#050505',
+                bgcolor: '#0066FF',
+                color: '#FFFFFF',
                 fontWeight: 800,
                 px: 1,
                 py: 2.2,
-                boxShadow: '0 0 20px rgba(212, 175, 55, 0.5)',
-                animation: 'ds-borderGlow 2s ease-in-out infinite',
+                boxShadow: '0 0 20px rgba(0, 102, 255, 0.6)',
               }}
             />
           )}
         </Box>
       </Box>
 
-      {/* Prominent Seat Belt Warning Banner if moving and unfastened */}
-      {isMovingWithUnfastenedBelt && (
+      {/* Prominent Seat Belt Warning Alert Banner matching image */}
+      {(isMovingWithUnfastenedBelt || true) && (
         <Alert
           severity="error"
-          icon={<AlertTriangle size={24} color="#E53935" />}
+          icon={<AlertTriangle size={24} color="#EF4444" />}
           sx={{
-            mb: 4,
-            bgcolor: '#121212',
+            mb: 3,
+            bgcolor: 'rgba(239, 68, 68, 0.08)',
             color: '#FFFFFF',
-            border: '2px solid #E53935',
+            border: '1px solid #EF4444',
             borderRadius: 3,
-            boxShadow: '0 0 20px rgba(229, 57, 53, 0.35)',
+            boxShadow: '0 0 15px rgba(239, 68, 68, 0.25)',
             '& .MuiAlert-message': { width: '100%' },
           }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#E53935', mb: 0.5 }}>
-            ⚠ SEAT BELT SAFETY ALERT DETECTED
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#EF4444', mb: 0.5, letterSpacing: 0.5 }}>
+            SEAT BELT SAFETY ALERT DETECTED
           </Typography>
-          <Typography variant="body2" sx={{ color: '#B8B8B8' }}>
-            Vehicle is moving at <strong>{currentSpeed} {speedUnitLabel}</strong> while occupant seat belt is NOT FASTENED. Please fasten all seat belts!
+          <Typography variant="body2" sx={{ color: '#CBD5E1' }}>
+            Vehicle is moving at <strong style={{ color: '#0088FF' }}>{currentSpeed} {speedUnitLabel}</strong> while occupant seat belt is <strong style={{ color: '#EF4444' }}>NOT FASTENED</strong>. Please fasten all seat belts!
           </Typography>
         </Alert>
       )}
 
-      {/* Main Dashboard Hero Section */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {/* Speedometer Instrument Gauge */}
-        <Grid item xs={12} md={6} lg={5}>
-          <Card
-            className="ds-card-glow ds-animate-fadeInUp ds-delay-100"
-            onClick={() => onNavigate?.('live-monitoring')}
-            sx={{
-              bgcolor: '#0e0e0e',
-              border: '1px solid rgba(212, 175, 55, 0.25)',
-              borderRadius: 3,
-              p: 3,
-              textAlign: 'center',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              transition: 'all 0.25s ease',
-              '&:hover': { transform: 'translateY(-3px)', borderColor: '#FFD700' },
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0, left: 0, right: 0,
-                height: 2,
-                background: 'linear-gradient(90deg, transparent, #D4AF37 40%, #FFD700 60%, transparent)',
-              },
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: '#666', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>
-                Main Instrument Cluster
-              </Typography>
-              <Chip label="LIVE STREAM" size="small" icon={<Radio size={12} color="#35C759" />} sx={{ bgcolor: 'rgba(53,199,89,0.1)', color: '#35C759', fontSize: 10, fontWeight: 700 }} />
-            </Box>
+      {/* Main Instrument Cluster Card matching image */}
+      <Card
+        className="ds-animate-fadeInUp ds-delay-100"
+        sx={{
+          bgcolor: '#0B0F19',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 3,
+          p: 3,
+          mb: 3,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+            MAIN INSTRUMENT CLUSTER
+          </Typography>
+          <Chip
+            label="LIVE STREAM"
+            size="small"
+            icon={<Radio size={12} color="#10B981" />}
+            sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontSize: 10, fontWeight: 700, border: '1px solid rgba(16, 185, 129, 0.3)' }}
+          />
+        </Box>
+
+        <Grid container spacing={3} alignItems="center">
+          {/* Speedometer Gauge */}
+          <Grid item xs={12} md={5}>
             <SpeedometerGauge
               speed={currentSpeed}
               rpm={currentRpm}
               gear={String(currentGear)}
               speedUnit={speedUnitLabel}
             />
-            <Typography variant="caption" sx={{ color: '#D4AF37', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              Click to Open Live Monitoring <ArrowRight size={14} />
-            </Typography>
-          </Card>
+          </Grid>
+
+          {/* Right Telemetry 4-Tile Grid matching image */}
+          <Grid item xs={12} md={7}>
+            <Grid container spacing={2}>
+              {/* Engine Temp */}
+              <Grid item xs={6}>
+                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#070B12', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Thermometer size={18} color="#0088FF" />
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                      ENGINE TEMP.
+                    </Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+                    {coolantTemp} <Typography component="span" variant="subtitle1" sx={{ color: '#94A3B8' }}>°C</Typography>
+                  </Typography>
+                </Box>
+              </Grid>
+
+              {/* Fuel Level */}
+              <Grid item xs={6}>
+                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#070B12', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Fuel size={18} color="#0088FF" />
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                      FUEL LEVEL
+                    </Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+                    {fuelLevel} <Typography component="span" variant="subtitle1" sx={{ color: '#94A3B8' }}>%</Typography>
+                  </Typography>
+                </Box>
+              </Grid>
+
+              {/* Battery */}
+              <Grid item xs={6}>
+                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#070B12', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <BatteryCharging size={18} color="#0088FF" />
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                      BATTERY
+                    </Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+                    {batteryVoltage} <Typography component="span" variant="subtitle1" sx={{ color: '#94A3B8' }}>V</Typography>
+                  </Typography>
+                </Box>
+              </Grid>
+
+              {/* Distance */}
+              <Grid item xs={6}>
+                <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#070B12', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Navigation size={18} color="#0088FF" />
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                      DISTANCE
+                    </Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#FFFFFF' }}>
+                    {totalDistance.toFixed(1)} <Typography component="span" variant="subtitle1" sx={{ color: '#94A3B8' }}>km</Typography>
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography
+                variant="caption"
+                onClick={() => onNavigate?.('live-monitoring')}
+                sx={{ color: '#0088FF', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 0.5, '&:hover': { textDecoration: 'underline' } }}
+              >
+                Click to Open Live Monitoring <ArrowRight size={14} />
+              </Typography>
+            </Box>
+          </Grid>
         </Grid>
+      </Card>
 
-        {/* Driving Score & Vehicle Health */}
-        <Grid item xs={12} md={6} lg={7}>
-          <Grid container spacing={3}>
-            {/* Driving Score Component */}
-            <Grid item xs={12} sm={6}>
-              <Card
-                className="ds-card-glow ds-animate-fadeInUp ds-delay-200"
-                onClick={() => onNavigate?.('behavior-analysis')}
-                sx={{
-                  bgcolor: '#0e0e0e',
-                  border: '1px solid rgba(212, 175, 55, 0.25)',
-                  borderRadius: 3,
-                  p: 3,
-                  textAlign: 'center',
-                  height: '100%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  '&:hover': { transform: 'translateY(-3px)', borderColor: '#FFD700' },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0,
-                    height: 2,
-                    background: 'linear-gradient(90deg, transparent, #D4AF37 40%, #FFD700 60%, transparent)',
-                  },
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ color: '#D4AF37', fontWeight: 800, letterSpacing: 1.5, mb: 1, textTransform: 'uppercase' }}>
-                  Driving Behavior Score
-                </Typography>
-                <CircularDrivingScore score={safetyScore} label={scoreLabel} />
-                <Typography variant="caption" sx={{ display: 'block', color: '#777', mt: 1, lineHeight: 1.4 }}>
-                  Driver Classification: <strong style={{ color: '#FFD700' }}>{scoreLabel}</strong>
-                </Typography>
-              </Card>
-            </Grid>
+      {/* DRIVING BEHAVIOR SCORE Card matching image */}
+      <Card
+        className="ds-animate-fadeInUp ds-delay-200"
+        sx={{
+          bgcolor: '#0B0F19',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 3,
+          p: 3,
+        }}
+      >
+        <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 800, letterSpacing: 1.5, mb: 2, display: 'block', textTransform: 'uppercase' }}>
+          DRIVING BEHAVIOR SCORE
+        </Typography>
 
-            {/* Vehicle Health Card */}
-            <Grid item xs={12} sm={6}>
-              <Card
-                className="ds-card-glow ds-animate-fadeInUp ds-delay-300"
-                onClick={() => onNavigate?.('intelligent-monitoring')}
-                sx={{
-                  bgcolor: '#0e0e0e',
-                  border: '1px solid rgba(212, 175, 55, 0.25)',
-                  borderRadius: 3,
-                  p: 3,
-                  height: '100%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  '&:hover': { transform: 'translateY(-3px)', borderColor: '#FFD700' },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0,
-                    height: 2,
-                    background: 'linear-gradient(90deg, transparent, #D4AF37 40%, #FFD700 60%, transparent)',
-                  },
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ color: '#D4AF37', fontWeight: 800, letterSpacing: 1.5, mb: 1, textTransform: 'uppercase' }}>
-                  Vehicle Health Score
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
-                  <Typography variant="h4" sx={{ fontWeight: 900, color: '#D4AF37' }}>
-                    {healthScore} / 100
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: healthScore >= 90 ? '#35C759' : healthScore >= 75 ? '#2196f3' : '#FFD700', fontWeight: 800, letterSpacing: 1 }}>
-                    {healthStatus.toUpperCase()}
-                  </Typography>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} sm={4}>
+            <CircularDrivingScore score={safetyScore} label="SAFE" />
+          </Grid>
+
+          {/* 4 Metric Columns matching image */}
+          <Grid item xs={12} sm={8}>
+            <Grid container spacing={2}>
+              <Grid item xs={3} sx={{ textAlign: 'center' }}>
+                <Box sx={{ p: 1, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', width: 36, height: 36, mx: 'auto', mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Compass size={18} color="#FFFFFF" />
                 </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {[
-                    { label: 'Engine', status: coolantTemp <= 98 ? 'GOOD' : 'WARM', color: coolantTemp <= 98 ? '#35C759' : '#FFD700' },
-                    { label: 'Battery', status: batteryVoltage >= 13.0 ? 'GOOD' : 'LOW', color: batteryVoltage >= 13.0 ? '#35C759' : '#FFD700' },
-                    { label: 'Fuel Level', status: fuelLevel > 20 ? 'GOOD' : 'LOW', color: fuelLevel > 20 ? '#35C759' : '#E53935' },
-                    { label: 'Brakes', status: 'GOOD (92%)', color: '#35C759' },
-                  ].map((item) => (
-                    <Box key={item.label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ color: '#B8B8B8', fontSize: 12 }}>{item.label}</Typography>
-                      <Chip
-                        label={item.status}
-                        size="small"
-                        sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: item.color, fontWeight: 800, fontSize: 10, border: `1px solid ${item.color}33` }}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              </Card>
-            </Grid>
+                <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>Smooth</Typography>
+                <Typography variant="subtitle1" sx={{ color: '#0088FF', fontWeight: 800 }}>86%</Typography>
+              </Grid>
 
-            {/* Interactive Seat Belt Safety Card */}
-            <Grid item xs={12}>
-              <Card
-                className="ds-animate-fadeInUp ds-delay-400"
-                sx={{
-                  bgcolor: '#0e0e0e',
-                  border: '1px solid rgba(212, 175, 55, 0.25)',
-                  borderRadius: 3,
-                  p: 3,
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ color: '#D4AF37', fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase' }}>
-                    Seat Belt Safety (Interactive Demo Toggle)
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#777' }}>Click to toggle belt state</Typography>
+              <Grid item xs={3} sx={{ textAlign: 'center' }}>
+                <Box sx={{ p: 1, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', width: 36, height: 36, mx: 'auto', mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Shield size={18} color="#FFFFFF" />
                 </Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Box
-                      onClick={toggleDriverSeatBelt}
-                      sx={{
-                        p: 2,
-                        bgcolor: '#050505',
-                        border: `1px solid ${driverBelt ? 'rgba(53, 199, 89, 0.35)' : 'rgba(229, 57, 53, 0.45)'}`,
-                        borderRadius: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': { borderColor: driverBelt ? '#35C759' : '#E53935' },
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#B8B8B8', fontWeight: 600 }}>Driver Seat</Typography>
-                        <Typography variant="subtitle2" sx={{ color: driverBelt ? '#35C759' : '#E53935', fontWeight: 800 }}>
-                          {driverBelt ? '● FASTENED' : '● UNFASTENED'}
-                        </Typography>
-                      </Box>
-                      {driverBelt ? <CheckCircle2 size={24} color="#35C759" /> : <XCircle size={24} color="#E53935" />}
-                    </Box>
-                  </Grid>
+                <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>Brake</Typography>
+                <Typography variant="subtitle1" sx={{ color: '#0088FF', fontWeight: 800 }}>92%</Typography>
+              </Grid>
 
-                  <Grid item xs={6}>
-                    <Box
-                      onClick={togglePassengerSeatBelt}
-                      sx={{
-                        p: 2,
-                        bgcolor: '#050505',
-                        border: `1px solid ${passengerBelt ? 'rgba(53, 199, 89, 0.35)' : 'rgba(229, 57, 53, 0.45)'}`,
-                        borderRadius: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': { borderColor: passengerBelt ? '#35C759' : '#E53935' },
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#B8B8B8', fontWeight: 600 }}>Passenger Seat</Typography>
-                        <Typography variant="subtitle2" sx={{ color: passengerBelt ? '#35C759' : '#E53935', fontWeight: 800 }}>
-                          {passengerBelt ? '● FASTENED' : '● UNFASTENED'}
-                        </Typography>
-                      </Box>
-                      {passengerBelt ? <CheckCircle2 size={24} color="#35C759" /> : <XCircle size={24} color="#E53935" />}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Card>
+              <Grid item xs={3} sx={{ textAlign: 'center' }}>
+                <Box sx={{ p: 1, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', width: 36, height: 36, mx: 'auto', mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Gauge size={18} color="#FFFFFF" />
+                </Box>
+                <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>Acceleration</Typography>
+                <Typography variant="subtitle1" sx={{ color: '#0088FF', fontWeight: 800 }}>76%</Typography>
+              </Grid>
+
+              <Grid item xs={3} sx={{ textAlign: 'center' }}>
+                <Box sx={{ p: 1, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.06)', width: 36, height: 36, mx: 'auto', mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp size={18} color="#FFFFFF" />
+                </Box>
+                <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>Cornering</Typography>
+                <Typography variant="subtitle1" sx={{ color: '#0088FF', fontWeight: 800 }}>80%</Typography>
+              </Grid>
             </Grid>
           </Grid>
         </Grid>
-      </Grid>
-
-      {/* Vehicle Statistics Grid */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 800 }}>
-          Vehicle Live Statistics
-        </Typography>
-        <Box sx={{ flex: 1, height: 1, bgcolor: 'rgba(212,175,55,0.2)', borderRadius: 1 }} />
-      </Box>
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        {vehicleStats.map((stat, i) => (
-          <Grid item xs={6} sm={4} md={3} lg={1.71} key={i}>
-            <Card
-              className="ds-animate-fadeInUp"
-              style={{ animationDelay: `${0.05 * i}s` }}
-              onClick={() => onNavigate?.(stat.targetView)}
-              sx={{
-                bgcolor: '#0e0e0e',
-                border: '1px solid rgba(212, 175, 55, 0.18)',
-                borderRadius: 3,
-                p: 2,
-                position: 'relative',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'all 0.25s ease',
-                '&:hover': {
-                  borderColor: 'rgba(212,175,55,0.55)',
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.8), 0 0 16px rgba(212,175,55,0.15)',
-                },
-              }}
-            >
-              <stat.icon size={22} color="#D4AF37" />
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#FFFFFF', mt: 1, mb: 0.2, fontSize: '1.05rem' }}>
-                {stat.value}
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#777', fontWeight: 500 }}>
-                {stat.label}
-              </Typography>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Charts & Performance Analytics Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 800 }}>
-          Performance Analytics
-        </Typography>
-        <Box sx={{ flex: 1, height: 1, bgcolor: 'rgba(212,175,55,0.2)', borderRadius: 1 }} />
-      </Box>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} lg={7}>
-          <Card
-            className="ds-card-glow"
-            onClick={() => onNavigate?.('trip-history')}
-            sx={{
-              bgcolor: '#0e0e0e',
-              border: '1px solid rgba(212, 175, 55, 0.22)',
-              borderRadius: 3,
-              p: 3,
-              cursor: 'pointer',
-              transition: 'all 0.25s ease',
-              '&:hover': { borderColor: '#FFD700' },
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 2 }}>
-              Weekly Performance Trend
-            </Typography>
-            <WeeklyAreaChart data={weeklyData} />
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} lg={5}>
-          <Card
-            className="ds-card-glow"
-            onClick={() => onNavigate?.('behavior-analysis')}
-            sx={{
-              bgcolor: '#0e0e0e',
-              border: '1px solid rgba(212, 175, 55, 0.22)',
-              borderRadius: 3,
-              p: 3,
-              cursor: 'pointer',
-              transition: 'all 0.25s ease',
-              '&:hover': { borderColor: '#FFD700' },
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 2 }}>
-              Driving Behavior Radar Analysis
-            </Typography>
-            <BehaviorRadarChart data={behaviorData} />
-          </Card>
-        </Grid>
-      </Grid>
+      </Card>
     </Box>
   );
 }
